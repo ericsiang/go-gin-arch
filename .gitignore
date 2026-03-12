@@ -1,0 +1,22 @@
+/log/*/*.*
+.vscode/
+.svn
+.gitlab-ci.yml
+script/branch/
+script/trunk/bin/runtime
+script/trunk/bin/game_engine
+bin/
+_*
+*.log
+dist
+*.ini
+/docs
+markdown.md
+tree.md
+
+# 敏感配置文件（不提交到 Git）
+conf/env.yaml
+conf/env.docker.yaml
+
+# 如果有本地测试配置
+conf/env.local.yaml

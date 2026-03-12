@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: gin-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: '123456'
+      MYSQL_DATABASE: siang_gin
+      TZ: Asia/Taipei
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - gin-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gin-redis
+    ports:
+      - "6378:6379"
+    networks:
+      - gin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Go Gin Application
+  app:
+    build:
+      context: ../../
+      dockerfile: scripts/docker/Dockerfile
+    container_name: gin-app
+    ports:
+      - "5001:5001"
+    environment:
+      - APP_MODE=debug
+      - TZ=Asia/Taipei
+    volumes:
+      - ../../conf/env.docker.yaml:/app/conf/env.yaml:ro
+      - app_logs:/app/log
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gin-network
+    
+
+networks:
+  gin-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  app_logs:
