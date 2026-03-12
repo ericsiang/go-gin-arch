@@ -6,8 +6,6 @@ import (
 	"self_go_gin/infra/orm/gorm_mysql"
 )
 
-var err error
-
 // Migrate 自動遷移數據庫結構
 func Migrate() {
 	db, err := gorm_mysql.GetMysqlDB()

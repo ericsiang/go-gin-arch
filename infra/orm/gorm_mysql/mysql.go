@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"self_go_gin/infra/env"
-	"self_go_gin/internal/model"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -54,7 +53,6 @@ func InitMysql(serverEnv *env.ServerConfig) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 
-	model.SetDB(db)
 	fmt.Println("mysql connect success")
 }
 
