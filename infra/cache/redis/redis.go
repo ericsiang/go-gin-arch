@@ -13,7 +13,7 @@ import (
 var redisClient *redis.Client
 
 // InitRedis 初始化 Redis 客戶端
-func InitRedis(serverEnv  *env.ServerConfig) *redis.Client {
+func InitRedis(serverEnv *env.ServerConfig) *redis.Client {
 	redisConfig := serverEnv.Redis
 	redisAddr := redisConfig.Host + ":" + strconv.Itoa(redisConfig.Port)
 	redisClient = redis.NewClient(&redis.Options{

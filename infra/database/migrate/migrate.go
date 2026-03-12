@@ -10,7 +10,7 @@ var err error
 
 // Migrate 自動遷移數據庫結構
 func Migrate() {
-	db ,err := gorm_mysql.GetMysqlDB()
+	db, err := gorm_mysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}

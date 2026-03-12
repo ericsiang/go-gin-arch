@@ -10,7 +10,7 @@ import (
 
 // CreateUser 創建用戶資料
 func CreateUser() {
-	db ,err := gorm_mysql.GetMysqlDB()
+	db, err := gorm_mysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +40,7 @@ func CreateUser() {
 
 // CreateAdmin 創建管理員資料
 func CreateAdmin() {
-	db ,err := gorm_mysql.GetMysqlDB()
+	db, err := gorm_mysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}

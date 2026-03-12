@@ -17,7 +17,7 @@ import (
 var db *gorm.DB
 
 // InitMysql 初始化 MySQL 資料庫連接
-func InitMysql(serverEnv  *env.ServerConfig) {
+func InitMysql(serverEnv *env.ServerConfig) {
 	var config *gorm.Config
 	gormZaplogger := zapgorm2.New(zap.L())
 	logger.Default.LogMode(logger.Error)

@@ -15,7 +15,7 @@ type LoginRole string
 // login role
 const (
 	// 	LoginUser 用戶角色
-	LoginUser  LoginRole = "user"
+	LoginUser LoginRole = "user"
 	// LoginAdmin 管理員角色
 	LoginAdmin LoginRole = "admin"
 )

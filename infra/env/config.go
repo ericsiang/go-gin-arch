@@ -175,20 +175,20 @@ type ConfigManager struct {
 
 func NewConfigManager() *ConfigManager {
 	return &ConfigManager{
-		mu :     sync.RWMutex{},
+		mu:     sync.RWMutex{},
 		config: NewServerConfig(),
 	}
 }
 
 // GetServerEnv 安全地獲取配置（併發讀）
-func (c *ConfigManager)GetServerEnv() *ServerConfig {
+func (c *ConfigManager) GetServerEnv() *ServerConfig {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.config
 }
 
 // UpdateConfig 更新配置（併發寫）
-func (c *ConfigManager)UpdateConfig(newConfig *ServerConfig) {
+func (c *ConfigManager) UpdateConfig(newConfig *ServerConfig) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.config = newConfig

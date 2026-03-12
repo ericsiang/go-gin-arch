@@ -9,19 +9,19 @@ type MetricsCollector struct {
 	// HTTP 請求指標
 
 	// HttpRequestTotal 記錄 HTTP 請求總數，標籤包括 method、path、status、api_version
-	HttpRequestTotal    *prometheus.CounterVec
+	HttpRequestTotal *prometheus.CounterVec
 	// HttpRequestDuration 記錄 HTTP 請求持續時間，標籤包括 method、path、status
 	HttpRequestDuration *prometheus.HistogramVec
 	// HttpRequestSize 記錄 HTTP 請求大小，標籤包括 method、path、status
-	HttpRequestSize     *prometheus.SummaryVec
+	HttpRequestSize *prometheus.SummaryVec
 	// HttpResponseSize 記錄 HTTP 回應大小，標籤包括 method、path、status
-	HttpResponseSize    *prometheus.SummaryVec
+	HttpResponseSize *prometheus.SummaryVec
 
 	// 業務指標
 	// BusinessEvents 記錄業務事件，標籤包括 event_type、domain、status
-	BusinessEvents         *prometheus.CounterVec
+	BusinessEvents *prometheus.CounterVec
 	// DatabaseQueryDuration 記錄資料庫查詢持續時間，標籤包括 operation、table、success
-	DatabaseQueryDuration  *prometheus.HistogramVec
+	DatabaseQueryDuration *prometheus.HistogramVec
 	// CacheOperationDuration 記錄快取操作持續時間，標籤包括 operation、cache_type、success
 	CacheOperationDuration *prometheus.HistogramVec
 
@@ -29,9 +29,9 @@ type MetricsCollector struct {
 	// GoroutineCount 記錄當前 Goroutine 數量
 	GoroutineCount prometheus.Gauge
 	// MemoryUsage 記錄記憶體使用量
-	MemoryUsage    prometheus.Gauge
+	MemoryUsage prometheus.Gauge
 	// CPUUsage 記錄 CPU 使用率
-	CPUUsage       prometheus.Gauge
+	CPUUsage prometheus.Gauge
 }
 
 // NewMetricsCollector 建立新的 MetricsCollector 實例

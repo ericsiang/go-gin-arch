@@ -46,7 +46,7 @@ func InitEnv(envPath string) error {
 	fmt.Printf("讀取配置文件: %s\n", envPath+envFile)
 	if envPath == "" {
 		// 如果未通过环境变量指定，默认使用可执行文件目录下的 conf 文件夹
-		v.SetConfigName("env") // 檔名
+		v.SetConfigName("env")    // 檔名
 		v.SetConfigType("yaml")   // 格式
 		v.AddConfigPath("./conf") // 執行路徑下的 conf
 		v.AddConfigPath("../../conf")

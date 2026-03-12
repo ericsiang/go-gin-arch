@@ -20,7 +20,7 @@ type UserService struct {
 }
 
 // NewUserService 創建用戶服務層
-func NewUserService() (*UserService,error) {
+func NewUserService() (*UserService, error) {
 	repo, err := repository.NewUserRepository()
 	if err != nil {
 		return nil, fmt.Errorf("UserService NewUserService(): %w", err)

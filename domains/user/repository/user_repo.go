@@ -28,7 +28,7 @@ func NewUserRepository() (UserRepositoryInterface, error) {
 	}
 	return &userRepositoryImpl{
 		dao: dao,
-	},nil
+	}, nil
 }
 
 func (r *userRepositoryImpl) GetDB() *gorm.DB {

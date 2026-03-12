@@ -38,7 +38,7 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*model.Admins, 
 	logData := map[string]interface{}{
 		"account": account,
 	}
-	fmt.Println("logData:",logData)
+	fmt.Println("logData:", logData)
 	admin, err := r.dao.GetAdminByAccount(account)
 	if err != nil {
 		return nil, fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() data: %s \n %w", logData, err)

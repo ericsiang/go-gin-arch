@@ -40,7 +40,7 @@ func CreateAdmin(ctx *gin.Context) {
 		return
 	}
 
-	adminService ,err := service.NewAdminService()
+	adminService, err := service.NewAdminService()
 	if err != nil {
 		zap.L().Error("\n Api CreateAdmin() NewAdminService fail : " + err.Error())
 		gin_response.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
@@ -86,7 +86,7 @@ func AdminLogin(ctx *gin.Context) {
 		return
 	}
 
-	adminService ,err := service.NewAdminService()
+	adminService, err := service.NewAdminService()
 	if err != nil {
 		zap.L().Error("\n Api AdminLogin() NewAdminService fail : " + err.Error())
 		gin_response.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
