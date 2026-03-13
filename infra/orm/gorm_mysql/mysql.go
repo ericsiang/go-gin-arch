@@ -1,4 +1,5 @@
-package gorm_mysql
+// Package gormysql 提供了初始化 GORM 連接 MySQL 資料庫的功能
+package gormysql
 
 import (
 	"fmt"

@@ -1,3 +1,4 @@
+// Package middleware 定義了 Gin 應用程式的中間件函數
 package middleware
 
 import (
@@ -33,7 +34,7 @@ func JwtAuthMiddleware() gin.HandlerFunc {
 			jwtToken := strings.Split(bearerToken, " ")
 			token := jwtToken[1]
 
-			claims, err := jwt_secret.ParseToken(token)
+			claims, err := jwtsecret.ParseToken(token)
 			if claims != nil {
 				if claims.UserID == 0 && claims.AdminID == 0 {
 					message = "jwt data fail"

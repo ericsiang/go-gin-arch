@@ -1,3 +1,4 @@
+// Package response 定義管理員相關的API回應結構
 package response
 
 // CreateAdminResponse 創建管理員回應

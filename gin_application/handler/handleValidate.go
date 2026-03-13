@@ -21,7 +21,7 @@ func ValidCheckAndTrans(context *gin.Context, err error) (ok bool) {
 			i++
 		}
 
-		gin_response.ErrorResponse(context, http.StatusBadRequest, "validate fail", msgid.Fail, validTransMsgData)
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "validate fail", msgid.Fail, validTransMsgData)
 		return ok
 	}
 	return false

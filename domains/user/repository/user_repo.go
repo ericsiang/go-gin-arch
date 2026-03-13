@@ -1,3 +1,4 @@
+// Package repository 定義用戶倉庫接口和實現
 package repository
 
 import (

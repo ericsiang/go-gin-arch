@@ -1,3 +1,4 @@
+// Package request 定義管理員相關的API請求結構
 package request
 
 // CreateAdminRequest 創建管理員請求

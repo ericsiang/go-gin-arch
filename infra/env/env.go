@@ -97,6 +97,7 @@ func InitEnv(envPath string) error {
 	return nil
 }
 
+// GetConfigManager 獲取配置管理器實例
 func GetConfigManager() *ConfigManager {
 	return configManager
 }

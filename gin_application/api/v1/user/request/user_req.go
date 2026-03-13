@@ -1,3 +1,4 @@
+// Package request 定義用戶相關的API請求結構
 package request
 
 // CreateUserRequest 創建用戶請求

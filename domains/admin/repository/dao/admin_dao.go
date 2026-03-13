@@ -1,3 +1,4 @@
+// Package dao 定義管理員帳號密碼表的數據訪問對象和接口
 package dao
 
 import (
@@ -19,7 +20,7 @@ type adminDaoImpl struct {
 
 // NewAdminDao 建立管理員帳號密碼表 DAO
 func NewAdminDao() (AdminDaoInterface, error) {
-	db, err := gorm_mysql.GetMysqlDB()
+	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		return nil, fmt.Errorf("AdminDao NewAdminDao() GetMysqlDB fail : %w", err)
 	}

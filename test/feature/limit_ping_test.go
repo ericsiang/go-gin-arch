@@ -15,6 +15,9 @@ func TestLimitPing(t *testing.T) {
 	if get.StatusCode != http.StatusOK {
 		t.Error("http StatusCode not 200 ")
 	}
+	defer func() {
+		_ = get.Body.Close() // 明確忽略錯誤，errcheck 就會閉嘴
+	}()
 }
 
 // 通用http请求

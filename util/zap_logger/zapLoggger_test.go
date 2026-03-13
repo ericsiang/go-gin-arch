@@ -1,4 +1,5 @@
-package zap_logger
+// zaplogger 測試
+package zaplogger
 
 import (
 	"testing"

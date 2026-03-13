@@ -1,3 +1,4 @@
+// Package redis 提供 Redis 客戶端的初始化和訪問功能，使用 go-redis 庫來與 Redis 服務器進行通信。
 package redis
 
 import (

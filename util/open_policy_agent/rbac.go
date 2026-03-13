@@ -1,3 +1,4 @@
+// Package opa 提供了與 Open Policy Agent (OPA) 相關的功能
 package opa
 
 import (

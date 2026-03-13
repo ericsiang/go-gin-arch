@@ -1,3 +1,4 @@
+// Package env 負責應用程式的環境配置管理，提供從 YAML 文件載入配置、驗證配置完整性以及線程安全的配置訪問和更新功能。
 package env
 
 import (
@@ -173,6 +174,7 @@ type ConfigManager struct {
 	config *ServerConfig
 }
 
+// NewConfigManager 創建新的 ConfigManager 實例
 func NewConfigManager() *ConfigManager {
 	return &ConfigManager{
 		mu:     sync.RWMutex{},

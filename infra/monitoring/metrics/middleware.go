@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MetricsMiddleware 是一個 Gin 中間件，用於記錄 HTTP 請求指標
-func MetricsMiddleware(collector *MetricsCollector) gin.HandlerFunc {
+// Middleware 是一個 Gin 中間件，用於記錄 HTTP 請求指標
+func Middleware(collector *Collector) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 
@@ -25,6 +25,6 @@ func MetricsMiddleware(collector *MetricsCollector) gin.HandlerFunc {
 		apiVersion := "v1" // 可從路徑中解析
 
 		// 記錄指標
-		collector.RecordHttpRequest(method, path, status, apiVersion, duration)
+		collector.RecordHTTPRequest(method, path, status, apiVersion, duration)
 	}
 }

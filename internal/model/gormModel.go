@@ -1,3 +1,4 @@
+// Package model 定義了 GORM 模型的基礎結構，供其他模型繼承使用
 package model
 
 import (

@@ -1,3 +1,4 @@
+// Package router 定義了 Gin 應用程式的路由設置
 package router
 
 import (
@@ -70,7 +71,7 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
 	// })
 
-	apiV1Group.GET("/logtest", func(c *gin.Context) {
+	apiV1Group.GET("/logtest", func(*gin.Context) {
 		test := true
 		if test {
 			zap.L().Info("Logger  Success..",

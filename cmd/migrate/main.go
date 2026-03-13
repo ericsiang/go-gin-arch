@@ -1,3 +1,4 @@
+// Package main 是 migrate 服务的入口，建立資料表跟初始資料
 package main
 
 import (
@@ -77,10 +78,10 @@ func initSetting() {
 	}
 	fmt.Printf("配置信息 : %+v\n", serverEnv)
 	gin.SetMode(serverEnv.AppMode)
-	gorm_mysql.InitMysql(serverEnv)
+	gormysql.InitMysql(serverEnv)
 	// Redis is optional for migration
 	// redis.InitRedis(GetServerEnv)
-	jwt_secret.SetJwtSecret(serverEnv.JwtSecret)
+	jwtsecret.SetJwtSecret(serverEnv.JwtSecret)
 	// vaildate 中文化
 	if err := validlang.InitValidateLang("zh"); err != nil {
 		fmt.Fprintf(os.Stderr, "init trans failed, err:%v\n", err)

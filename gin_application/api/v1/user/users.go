@@ -1,3 +1,4 @@
+// Package v1 用戶相關API
 package v1
 
 import (
@@ -38,23 +39,23 @@ func CreateUser(ctx *gin.Context) {
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		zap.L().Error("\n Api CreateUser() 失敗(ShouldBindBodyWith fail) : " + err.Error())
-		gin_response.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
 		zap.L().Error("\n Api CreateUser() NewUserService fail : " + err.Error())
-		gin_response.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	_, err = userService.CreateUser(data)
-	ok, err := handler.HandlerError(ctx, err)
+	ok, err := handler.HandleError(ctx, err)
 	if !ok {
 		zap.L().Error("\n Api CreateUser() \n " + err.Error())
 		return
 	}
-	gin_response.SuccessResponse(ctx, http.StatusOK, "", nil, msgid.Success)
+	ginresp.SuccessResponse(ctx, http.StatusOK, "", nil, msgid.Success)
 }
 
 // UserLogin 用戶登入
@@ -73,28 +74,28 @@ func UserLogin(ctx *gin.Context) {
 	if err := ctx.ShouldBindBodyWith(&data, binding.JSON); err != nil {
 		check := handler.ValidCheckAndTrans(ctx, err)
 		if check {
-			gin_response.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
+			ginresp.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
 			return
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		zap.L().Error("\n Api UserLogin() 失敗(ShouldBindBodyWith fail) : " + err.Error())
-		gin_response.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
 		zap.L().Error("\n Api UserLogin() NewUserService fail : " + err.Error())
-		gin_response.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	jwtToken, err := userService.CheckLogin(data)
-	ok, err := handler.HandlerError(ctx, err)
+	ok, err := handler.HandleError(ctx, err)
 	if !ok {
 		zap.L().Error("\n Api UserLogin() \n " + err.Error())
 		return
 	}
-	gin_response.SuccessResponse(ctx, http.StatusOK, "", gin_response.CreateMsgData("jwt_token", *jwtToken), msgid.Success)
+	ginresp.SuccessResponse(ctx, http.StatusOK, "", ginresp.CreateMsgData("jwt_token", *jwtToken), msgid.Success)
 }
 
 // GetUsersByID 根據ID獲取用戶
@@ -113,16 +114,16 @@ func GetUsersByID(ctx *gin.Context) {
 	var data request.GetUsersByIDRequest
 	usersID, ok := ctx.Get("usersID")
 	if !ok {
-		gin_response.ErrorResponse(ctx, http.StatusBadRequest, "can not get users", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "can not get users", msgid.Fail, nil)
 		return
 	}
 	data.FilterUsersID = ctx.Param("filterUsersID")
 	stringUsersID := fmt.Sprintf("%v", usersID)
 	if data.FilterUsersID != stringUsersID {
-		gin_response.ErrorResponse(ctx, http.StatusBadRequest, "user not match", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "user not match", msgid.Fail, nil)
 		return
 	}
 
-	gin_response.SuccessResponse(ctx, http.StatusOK, "success", data.FilterUsersID, msgid.Success)
+	ginresp.SuccessResponse(ctx, http.StatusOK, "success", data.FilterUsersID, msgid.Success)
 
 }

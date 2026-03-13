@@ -1,3 +1,4 @@
+// Package repository 定義管理員 Repository 介面和實現
 package repository
 
 import (

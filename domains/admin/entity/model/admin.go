@@ -1,3 +1,4 @@
+// Package model 定義管理員相關的數據模型
 package model
 
 import (

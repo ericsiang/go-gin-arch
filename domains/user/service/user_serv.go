@@ -1,3 +1,4 @@
+// Package service 定義用戶服務層
 package service
 
 import (
@@ -78,7 +79,7 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	if err := bcryptencap.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		return nil, fmt.Errorf("UserService CheckLogin() CompareHashAndPassword() data : %+v \n %w", logData, err) // 密碼錯誤
 	}
-	jwtToken, err := jwt_secret.GenerateToken(jwt_secret.LoginUser, user.ID)
+	jwtToken, err := jwtsecret.GenerateToken(jwtsecret.LoginUser, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("UserService CheckLogin() GenerateToken() data : %+v \n %w", logData, err) // 密碼錯誤
 	}

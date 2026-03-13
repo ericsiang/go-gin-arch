@@ -1,3 +1,4 @@
+// Package msgid 定義訊息識別碼
 package msgid
 
 // MsgID response 訊息的識別碼

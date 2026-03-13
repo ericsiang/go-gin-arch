@@ -1,4 +1,5 @@
-package jwt_secret
+// Package jwtsecret 提供JWT密鑰管理和生成/解析JWT token的功能
+package jwtsecret
 
 import (
 	"errors"
@@ -59,7 +60,7 @@ func GenerateToken(checkLoginRole LoginRole, loginID uint) (string, error) {
 // ParseToken 解析JWT token
 func ParseToken(token string) (*Claims, error) {
 	//用于解析鉴权的声明，方法内部主要是具体的解码和校验的过程，最终返回*Token
-	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(*jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
 

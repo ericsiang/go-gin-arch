@@ -1,3 +1,4 @@
+// Package zaplog 提供基於 zap 的日誌記錄功能，支持日誌切割和不同級別的日誌分離存儲。
 package zaplog
 
 import (
@@ -24,7 +25,7 @@ const (
 logPath: 日誌文件保存路徑
 */
 func GetZapLogger(logPath string) *zap.Logger {
-	rotatelogsConfig := &zap_logger.RotatelogsConfig{
+	rotatelogsConfig := &zaplogger.RotatelogsConfig{
 		InfoLogPath:   logPath + "info/info_%Y-%m-%d.log",
 		ErrorLogPath:  logPath + "error/error_%Y-%m-%d.log",
 		MaxSize:       ZapLoggerMaxSize,
@@ -33,7 +34,7 @@ func GetZapLogger(logPath string) *zap.Logger {
 		RotationTime:  ZapLoggerRotationTime,
 	}
 
-	zapLogger, err := zap_logger.NewLogger(rotatelogsConfig)
+	zapLogger, err := zaplogger.NewLogger(rotatelogsConfig)
 	if err != nil {
 		log.Fatalln("[logger] GetZapLogger() err : ", err)
 	}

@@ -1,4 +1,5 @@
-package jwt_secret
+// Package jwtsecret 提供JWT密鑰管理和生成/解析JWT token的功能
+package jwtsecret
 
 import (
 	"strings"

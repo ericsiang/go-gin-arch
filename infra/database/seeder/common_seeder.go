@@ -1,3 +1,4 @@
+// Package seeder 提供資料庫種子數據的創建功能，用於在開發和測試環境中快速生成初始數據。
 package seeder
 
 import (
@@ -10,7 +11,7 @@ import (
 
 // CreateUser 創建用戶資料
 func CreateUser() {
-	db, err := gorm_mysql.GetMysqlDB()
+	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +41,7 @@ func CreateUser() {
 
 // CreateAdmin 創建管理員資料
 func CreateAdmin() {
-	db, err := gorm_mysql.GetMysqlDB()
+	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}

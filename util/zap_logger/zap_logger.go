@@ -1,4 +1,6 @@
-package zap_logger
+package zaplogger
+
+// zap_logger 是一個基於 zap 和 file-rotatelogs 的日誌切割工具，支持按時間和文件大小切割日誌，並且可以同時輸出到控制台和文件
 
 import (
 	"errors"
@@ -63,15 +65,15 @@ func getFileRotatelogs(filePath string, rotatelogsConfig *RotatelogsConfig) (*ro
 		rotatelogs.WithRotationTime(rotatelogsConfig.RotationTime),         //切割頻率為時間單位
 		rotatelogs.WithRotationCount(uint(rotatelogsConfig.RotationCount)), //保留舊日誌文件最大保存個數
 		rotatelogs.WithRotationSize(rotatelogsConfig.MaxSize),              //切割頻率為文件大小
-		rotatelogs.WithHandler(rotatelogs.HandlerFunc(func(e rotatelogs.Event) {
-			// 在這裡添加你的自定義操作
-			// if e.Type() == rotatelogs.FileRotatedEventType {
-			// 這裡的代碼將在每次日誌切割時執行
-			// e.(*rotatelogs.FileRotatedEvent).PrevFile() 是上一個日誌文件的路徑
-			// e.(*rotatelogs.FileRotatedEvent).CurrentFile() 是當前日誌文件的路徑
-			// }
+		// rotatelogs.WithHandler(rotatelogs.HandlerFunc(func(e rotatelogs.Event) {
+		// 在這裡添加你的自定義操作
+		// if e.Type() == rotatelogs.FileRotatedEventType {
+		// 這裡的代碼將在每次日誌切割時執行
+		// e.(*rotatelogs.FileRotatedEvent).PrevFile() 是上一個日誌文件的路徑
+		// e.(*rotatelogs.FileRotatedEvent).CurrentFile() 是當前日誌文件的路徑
+		// }
 
-		})),
+		// })),
 	)
 
 	if err != nil {

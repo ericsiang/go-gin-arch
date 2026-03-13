@@ -1,21 +1,22 @@
+// Package metrics 提供應用程式的指標收集功能，使用 Prometheus 作為指標收集和暴露的工具。
 package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// MetricsCollector 指標收集器
-type MetricsCollector struct {
+// Collector 指標收集器
+type Collector struct {
 	// HTTP 請求指標
 
-	// HttpRequestTotal 記錄 HTTP 請求總數，標籤包括 method、path、status、api_version
-	HttpRequestTotal *prometheus.CounterVec
-	// HttpRequestDuration 記錄 HTTP 請求持續時間，標籤包括 method、path、status
-	HttpRequestDuration *prometheus.HistogramVec
-	// HttpRequestSize 記錄 HTTP 請求大小，標籤包括 method、path、status
-	HttpRequestSize *prometheus.SummaryVec
-	// HttpResponseSize 記錄 HTTP 回應大小，標籤包括 method、path、status
-	HttpResponseSize *prometheus.SummaryVec
+	// HTTPRequestTotal 記錄 HTTP 請求總數，標籤包括 method、path、status、api_version
+	HTTPRequestTotal *prometheus.CounterVec
+	// HTTPRequestDuration 記錄 HTTP 請求持續時間，標籤包括 method、path、status
+	HTTPRequestDuration *prometheus.HistogramVec
+	// HTTPRequestSize 記錄 HTTP 請求大小，標籤包括 method、path、status
+	HTTPRequestSize *prometheus.SummaryVec
+	// HTTPResponseSize 記錄 HTTP 回應大小，標籤包括 method、path、status
+	HTTPResponseSize *prometheus.SummaryVec
 
 	// 業務指標
 	// BusinessEvents 記錄業務事件，標籤包括 event_type、domain、status
@@ -35,16 +36,16 @@ type MetricsCollector struct {
 }
 
 // NewMetricsCollector 建立新的 MetricsCollector 實例
-func NewMetricsCollector() *MetricsCollector {
-	return &MetricsCollector{
-		HttpRequestTotal: prometheus.NewCounterVec(
+func NewMetricsCollector() *Collector {
+	return &Collector{
+		HTTPRequestTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Name: "http_requests_total",
 				Help: "Total number of HTTP requests",
 			},
 			[]string{"method", "path", "status", "api_version"},
 		),
-		HttpRequestDuration: prometheus.NewHistogramVec(
+		HTTPRequestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Name:    "http_request_duration_seconds",
 				Help:    "HTTP request duration in seconds",
@@ -82,19 +83,19 @@ func NewMetricsCollector() *MetricsCollector {
 	}
 }
 
-// RecordHttpRequest 記錄 HTTP 請求指標
-func (m *MetricsCollector) RecordHttpRequest(method, path, status, apiVersion string, duration float64) {
-	m.HttpRequestTotal.WithLabelValues(method, path, status, apiVersion).Inc()
-	m.HttpRequestDuration.WithLabelValues(method, path, status).Observe(duration)
+// RecordHTTPRequest 記錄 HTTP 請求指標
+func (m *Collector) RecordHTTPRequest(method, path, status, apiVersion string, duration float64) {
+	m.HTTPRequestTotal.WithLabelValues(method, path, status, apiVersion).Inc()
+	m.HTTPRequestDuration.WithLabelValues(method, path, status).Observe(duration)
 }
 
 // RecordBusinessEvent 記錄業務事件
-func (m *MetricsCollector) RecordBusinessEvent(eventType, domain, status string) {
+func (m *Collector) RecordBusinessEvent(eventType, domain, status string) {
 	m.BusinessEvents.WithLabelValues(eventType, domain, status).Inc()
 }
 
 // RecordDatabaseQuery 記錄資料庫查詢
-func (m *MetricsCollector) RecordDatabaseQuery(operation, table string, success bool, duration float64) {
+func (m *Collector) RecordDatabaseQuery(operation, table string, success bool, duration float64) {
 	m.DatabaseQueryDuration.WithLabelValues(operation, table, boolToString(success)).Observe(duration)
 }
 

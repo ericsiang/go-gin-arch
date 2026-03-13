@@ -1,3 +1,4 @@
+// Package migrate 負責數據庫結構的自動遷移，確保數據庫表結構與應用程式中的模型定義保持一致。
 package migrate
 
 import (
@@ -8,7 +9,7 @@ import (
 
 // Migrate 自動遷移數據庫結構
 func Migrate() {
-	db, err := gorm_mysql.GetMysqlDB()
+	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		panic(err)
 	}

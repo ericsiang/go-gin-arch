@@ -1,4 +1,5 @@
-package gin_response
+// Package ginresp 提供了通用的 Gin 回應結構和方法，方便在 Gin 框架中統一處理 API 回應。
+package ginresp
 
 import (
 	"self_go_gin/common/msgid"

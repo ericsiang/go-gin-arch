@@ -1,3 +1,4 @@
+// Package dao 提供通用資料存取功能，使用 GORM 作為 ORM 工具
 package dao
 
 import (
@@ -59,11 +60,13 @@ func (g *GenericDAO[T]) GetDB() *gorm.DB {
 	return g.db
 }
 
+// Create 創建新資料
 func (g *GenericDAO[T]) Create(model *T) (*T, error) {
 	err := g.db.Create(&model).Error
 	return model, err
 }
 
+// GetByID 根據 ID 獲取資料
 func (g *GenericDAO[T]) GetByID(id uint64) (*T, error) {
 	var model T
 	err := g.db.First(&model, id).Error
@@ -73,6 +76,7 @@ func (g *GenericDAO[T]) GetByID(id uint64) (*T, error) {
 	return &model, nil
 }
 
+// GetAll 獲取所有資料
 func (g *GenericDAO[T]) GetAll() ([]T, error) {
 	var models []T
 	err := g.db.Find(&models).Error
@@ -86,6 +90,7 @@ func (g *GenericDAO[T]) GetAll() ([]T, error) {
 // 	return g.db.Save(model).Error
 // }
 
+// Delete 刪除資料
 func (g *GenericDAO[T]) Delete(model *T) error {
 	return g.db.Delete(model).Error
 }

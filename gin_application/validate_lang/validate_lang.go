@@ -1,3 +1,4 @@
+// Package validlang 提供驗證錯誤的語系翻譯功能，支持多種語言的錯誤信息翻譯，方便在不同語言環境下使用。
 package validlang
 
 import (

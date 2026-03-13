@@ -1,3 +1,4 @@
+// Package dao 定義用戶數據訪問對象和接口
 package dao
 
 import (
@@ -19,7 +20,7 @@ type userDaoImpl struct {
 
 // NewUserDao 創建用戶數據訪問對象
 func NewUserDao() (UserDaoInterface, error) {
-	db, err := gorm_mysql.GetMysqlDB()
+	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		return nil, fmt.Errorf("UserDao NewUserDao() GetMysqlDB fail : %w", err)
 	}

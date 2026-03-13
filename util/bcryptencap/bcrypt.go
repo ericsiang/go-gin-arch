@@ -1,3 +1,4 @@
+// Package bcryptencap 提供 bcrypt 密碼加密和驗證的封裝函數
 package bcryptencap
 
 import (

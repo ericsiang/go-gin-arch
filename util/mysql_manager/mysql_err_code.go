@@ -1,8 +1,7 @@
-package mysql_manager
+// Package mysqlmgr 提供了 MySQL 錯誤處理與 GORM 記錄檢查的工具函數
+package mysqlmgr
 
 import (
-	"strconv"
-
 	mysqlErr "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
@@ -28,23 +27,4 @@ func CheckRecordNotFound(result *gorm.DB) error {
 		return gorm.ErrRecordNotFound
 	}
 	return nil
-}
-
-// StringToUint64 將字符串轉換為uint64
-func StringToUint64(s string) (uint64, error) {
-	ui64, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return ui64, nil
-}
-
-// StringToUint16 將字符串轉換為uint16
-func StringToUint16(s string) (uint16, error) {
-	ui64, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	ui16 := uint16(ui64)
-	return ui16, nil
 }

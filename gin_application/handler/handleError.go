@@ -1,3 +1,4 @@
+// Package handler 處理錯誤
 package handler
 
 import (
@@ -12,20 +13,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// HandlerError 處理錯誤
-func HandlerError(context *gin.Context, err error) (bool, error) {
+// HandleError 處理錯誤
+func HandleError(context *gin.Context, err error) (bool, error) {
 	switch {
-	case mysql_manager.MysqlErrCode(err) == mysql_manager.DuplicateEntryCode:
-		gin_response.ErrorResponse(context, http.StatusBadRequest, "", msgid.DuplicateEntry, nil)
+	case mysqlmgr.MysqlErrCode(err) == mysqlmgr.DuplicateEntryCode:
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.DuplicateEntry, nil)
 		return false, fmt.Errorf("HandlerError() DuplicateEntryCode : %w", err)
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		gin_response.ErrorResponse(context, http.StatusNotFound, "", msgid.NoContent, nil)
+		ginresp.ErrorResponse(context, http.StatusNotFound, "", msgid.NoContent, nil)
 		return false, fmt.Errorf("HandlerError() ErrRecordNotFound : %w", err)
 	case errors.Is(err, ErrResourceExist):
-		gin_response.ErrorResponse(context, http.StatusBadRequest, "", msgid.Fail, nil)
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.Fail, nil)
 		return false, fmt.Errorf("HandlerError() ErrResourceExist : %w", err)
 	case err != nil:
-		gin_response.ErrorResponse(context, http.StatusInternalServerError, "", msgid.Fail, nil)
+		ginresp.ErrorResponse(context, http.StatusInternalServerError, "", msgid.Fail, nil)
 		return false, fmt.Errorf("HandlerError() : %w", err)
 	default:
 		return true, nil

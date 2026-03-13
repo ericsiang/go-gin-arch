@@ -39,10 +39,10 @@ func CreateHandler(ctx *gin.Context, err error) (bool, error) {
 		mysqlErrorCheck, err := MysqlErrorCheck(ctx, err)
 		if mysqlErrorCheck {
 			return false, fmt.Errorf("CreateHandler() \n %w", err)
-		} else {
-			ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
-			return false, fmt.Errorf("CreateHandler() \n %w", err)
 		}
+		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		return false, fmt.Errorf("CreateHandler() \n %w", err)
+
 	}
 	return true, nil
 }
@@ -59,10 +59,10 @@ func UpdateHandler(ctx *gin.Context, err error) (bool, error) {
 		mysqlErrorCheck, err := MysqlErrorCheck(ctx, err)
 		if mysqlErrorCheck {
 			return false, fmt.Errorf("UpdateHandler() \n %w", err)
-		} else {
-			ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
-			return false, fmt.Errorf("UpdateHandler() \n %w", err)
 		}
+		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		return false, fmt.Errorf("UpdateHandler() \n %w", err)
+
 	}
 	return true, nil
 }
@@ -85,10 +85,10 @@ func DeleteHandler(ctx *gin.Context, err error) (bool, error) {
 				Msg: ErrResourceNotFound.Error(),
 			})
 			return false, fmt.Errorf("DeleteHandler() \n %w", err)
-		} else {
-			ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
-			return false, fmt.Errorf("DeleteHandler() \n %w", err)
 		}
+		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		return false, fmt.Errorf("DeleteHandler() \n %w", err)
+
 	}
 	return true, nil
 }

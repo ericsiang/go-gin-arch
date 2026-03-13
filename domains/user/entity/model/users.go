@@ -1,3 +1,4 @@
+// Package model 定義用戶相關的數據模型
 package model
 
 import (

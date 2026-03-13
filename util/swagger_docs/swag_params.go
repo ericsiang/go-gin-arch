@@ -1,4 +1,5 @@
-package swagger_docs
+// Package swaggerdocs 定义了用于 Swagger 文档的参数结构体
+package swaggerdocs
 
 // DocUsersLogin 用户登录参数
 type DocUsersLogin struct {

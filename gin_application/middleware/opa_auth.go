@@ -25,12 +25,10 @@ func OpaMiddleware() gin.HandlerFunc {
 		if result[0].Expressions[0].Value == true {
 			c.Next()
 			return
-		} else {
-			c.JSON(http.StatusForbidden, gin.H{
-				"message": "access forbidden",
-			})
-			c.Abort()
-			return
 		}
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": "access forbidden",
+		})
+		c.Abort()
 	}
 }

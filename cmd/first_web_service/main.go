@@ -1,3 +1,4 @@
+// Package main 是 web 服务的入口，负责初始化配置、数据库连接、路由设置，并启动 HTTP 服务器。
 package main
 
 import (
@@ -98,7 +99,7 @@ func cleanupResources() {
 	fmt.Println("Cleaning up resources...")
 
 	// 关闭数据库连接
-	if db, err := gorm_mysql.GetMysqlDB(); err != nil {
+	if db, err := gormysql.GetMysqlDB(); err != nil {
 		sqlDB, err := db.DB()
 		if err == nil {
 			if err := sqlDB.Close(); err != nil {
@@ -138,7 +139,7 @@ func initSetting() {
 
 	// 4. 初始化数据库
 	if serverEnv.MysqlDB.Host != "" {
-		gorm_mysql.InitMysql(serverEnv)
+		gormysql.InitMysql(serverEnv)
 	}
 
 	// 5. 初始化 Redis（如果需要）
@@ -147,7 +148,7 @@ func initSetting() {
 	}
 
 	// 6. 设置 JWT 密钥
-	jwt_secret.SetJwtSecret(serverEnv.JwtSecret)
+	jwtsecret.SetJwtSecret(serverEnv.JwtSecret)
 	fmt.Println("JWT secret configured")
 
 	// 7. 初始化验证器中文化
