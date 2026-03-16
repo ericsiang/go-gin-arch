@@ -19,4 +19,6 @@ const (
 	DuplicateEntry
 	// RuleNotAllow 规則不允許
 	RuleNotAllow
+	// ResourceExist 資源已存在
+	ResourceExist
 )

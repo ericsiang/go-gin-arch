@@ -3,9 +3,9 @@ package seeder
 
 import (
 	admin_model "self_go_gin/domains/admin/entity/model"
+	"self_go_gin/domains/common/valueobj"
 	user_model "self_go_gin/domains/user/entity/model"
-	"self_go_gin/infra/orm/gorm_mysql"
-	"self_go_gin/util/bcryptencap"
+	gormysql "self_go_gin/infra/orm/gorm_mysql"
 	"strconv"
 )
 
@@ -20,17 +20,19 @@ func CreateUser() {
 		panic(err)
 	}
 	var users []*user_model.User
-	//密碼加密
-	bcryptPassword, err := bcryptencap.GenerateFromPassword("123456")
-	if err != nil {
-		panic("Seeder CreateUser() bcrypt fail")
-	}
 
+	// 使用 DDD 方式創建用戶
 	for i := 1; i < 4; i++ {
-		users = append(users, &user_model.User{
-			Account:  "user" + strconv.Itoa(i),
-			Password: string(bcryptPassword),
-		})
+		account, err := valueobj.NewAccount("user" + strconv.Itoa(i))
+		if err != nil {
+			panic("Seeder CreateUser() create account fail: " + err.Error())
+		}
+		password, err := valueobj.NewPasswordFromPlainText("123456")
+		if err != nil {
+			panic("Seeder CreateUser() create password fail: " + err.Error())
+		}
+		user := user_model.NewUser(account, password)
+		users = append(users, user)
 	}
 
 	err = db.Create(&users).Error
@@ -50,17 +52,19 @@ func CreateAdmin() {
 		panic(err)
 	}
 	var admins []*admin_model.Admins
-	//密碼加密
-	bcryptPassword, err := bcryptencap.GenerateFromPassword("123456")
-	if err != nil {
-		panic("Seeder CreateAdmin() bcrypt fail")
-	}
 
+	// 使用 DDD 方式創建管理員
 	for i := 1; i < 4; i++ {
-		admins = append(admins, &admin_model.Admins{
-			Account:  "admin" + strconv.Itoa(i),
-			Password: string(bcryptPassword),
-		})
+		account, err := valueobj.NewAccount("admin" + strconv.Itoa(i))
+		if err != nil {
+			panic("Seeder CreateAdmin() create account fail: " + err.Error())
+		}
+		password, err := valueobj.NewPasswordFromPlainText("123456")
+		if err != nil {
+			panic("Seeder CreateAdmin() create password fail: " + err.Error())
+		}
+		admin := admin_model.NewAdmins(account, password)
+		admins = append(admins, admin)
 	}
 
 	err = db.Create(&admins).Error

@@ -3,45 +3,58 @@ package dao
 
 import (
 	"fmt"
-	"self_go_gin/domains/admin/entity/model"
-	"self_go_gin/infra/orm/gorm_mysql"
+	gormysql "self_go_gin/infra/orm/gorm_mysql"
 	"self_go_gin/internal/dao"
 )
 
-// AdminDaoInterface 管理員帳號密碼表 DAO 介面
-type AdminDaoInterface interface {
-	GetGenericDao() dao.GenericDaoInterface[model.Admins]
-	GetAdminByAccount(account string) (*model.Admins, error)
+// AdminDao 管理員帳號密碼表 DAO 介面
+type AdminDao interface {
+	GetGenericDao() dao.GenericDaoInterface[AdminPO]
+	GetAdminByAccount(account string) (*AdminPO, error)
+	Create(adminPO *AdminPO) (*AdminPO, error)
 }
 
 type adminDaoImpl struct {
-	GenericDao dao.GenericDaoInterface[model.Admins]
+	GenericDao dao.GenericDaoInterface[AdminPO]
 }
 
 // NewAdminDao 建立管理員帳號密碼表 DAO
-func NewAdminDao() (AdminDaoInterface, error) {
+func NewAdminDao() (AdminDao, error) {
 	db, err := gormysql.GetMysqlDB()
 	if err != nil {
 		return nil, fmt.Errorf("AdminDao NewAdminDao() GetMysqlDB fail : %w", err)
 	}
 	return &adminDaoImpl{
-		GenericDao: dao.NewGenericDAO[model.Admins](db),
+		GenericDao: dao.NewGenericDAO[AdminPO](db),
 	}, nil
 }
 
-func (d *adminDaoImpl) GetGenericDao() dao.GenericDaoInterface[model.Admins] {
+// GetGenericDao 取得通用 DAO 實例
+func (d *adminDaoImpl) GetGenericDao() dao.GenericDaoInterface[AdminPO] {
 	return d.GenericDao
 }
 
 // GetAdminByAccount 根據帳號查詢管理員
-func (d *adminDaoImpl) GetAdminByAccount(account string) (*model.Admins, error) {
+func (d *adminDaoImpl) GetAdminByAccount(account string) (*AdminPO, error) {
 	logData := map[string]interface{}{
 		"account": account,
 	}
-	var admin model.Admins
-	err := d.GenericDao.GetDB().Where("account =?", account).First(&admin).Error
+	var adminPO AdminPO
+	err := d.GenericDao.GetDB().Where("account = ?", account).First(&adminPO).Error
 	if err != nil {
 		return nil, fmt.Errorf("AdminDaoImpl GetAdminByAccount() data: %s \n %w", logData, err)
 	}
-	return &admin, err
+	return &adminPO, nil
+}
+
+// Create 創建管理員
+func (d *adminDaoImpl) Create(adminPO *AdminPO) (*AdminPO, error) {
+	logData := map[string]interface{}{
+		"adminPO": adminPO,
+	}
+	err := d.GenericDao.GetDB().Create(adminPO).Error
+	if err != nil {
+		return nil, fmt.Errorf("AdminDaoImpl Create() data: %s \n %w", logData, err)
+	}
+	return adminPO, nil
 }

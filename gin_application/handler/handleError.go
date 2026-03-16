@@ -23,7 +23,7 @@ func HandleError(context *gin.Context, err error) (bool, error) {
 		ginresp.ErrorResponse(context, http.StatusNotFound, "", msgid.NoContent, nil)
 		return false, fmt.Errorf("HandlerError() ErrRecordNotFound : %w", err)
 	case errors.Is(err, ErrResourceExist):
-		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.Fail, nil)
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.ResourceExist, nil)
 		return false, fmt.Errorf("HandlerError() ErrResourceExist : %w", err)
 	case err != nil:
 		ginresp.ErrorResponse(context, http.StatusInternalServerError, "", msgid.Fail, nil)

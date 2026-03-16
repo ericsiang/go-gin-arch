@@ -9,7 +9,7 @@ import (
 	"self_go_gin/gin_application/api/v1/admin/request"
 	"self_go_gin/gin_application/api/v1/admin/response"
 	"self_go_gin/gin_application/handler"
-	"self_go_gin/util/gin_response"
+	ginresp "self_go_gin/util/gin_response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -56,7 +56,7 @@ func CreateAdmin(ctx *gin.Context) {
 
 	respData := response.CreateAdminResponse{
 		AdminID: admin.ID,
-		Account: admin.Account,
+		Account: admin.GetAccount(),
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", respData, msgid.Success)
 }
