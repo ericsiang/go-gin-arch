@@ -3,7 +3,7 @@ package dao
 
 import (
 	"fmt"
-	gormysql "self_go_gin/infra/orm/gorm_mysql"
+	"self_go_gin/container"
 	"self_go_gin/internal/dao"
 )
 
@@ -20,10 +20,8 @@ type adminDaoImpl struct {
 
 // NewAdminDao 建立管理員帳號密碼表 DAO
 func NewAdminDao() (AdminDao, error) {
-	db, err := gormysql.GetMysqlDB()
-	if err != nil {
-		return nil, fmt.Errorf("AdminDao NewAdminDao() GetMysqlDB fail : %w", err)
-	}
+	app := container.GetContainer()
+	db := app.GetDB()
 	return &adminDaoImpl{
 		GenericDao: dao.NewGenericDAO[AdminPO](db),
 	}, nil

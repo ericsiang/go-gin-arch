@@ -2,18 +2,16 @@
 package migrate
 
 import (
+	"self_go_gin/container"
 	admin_model "self_go_gin/domains/admin/entity/model"
 	user_model "self_go_gin/domains/user/entity/model"
-	"self_go_gin/infra/orm/gorm_mysql"
 )
 
 // Migrate 自動遷移數據庫結構
 func Migrate() {
-	db, err := gormysql.GetMysqlDB()
-	if err != nil {
-		panic(err)
-	}
-	err = db.AutoMigrate(&user_model.User{})
+	app := container.GetContainer()
+	db := app.GetDB()
+	err := db.AutoMigrate(&user_model.User{})
 	panicErr(err)
 	err = db.AutoMigrate(&admin_model.Admins{})
 	panicErr(err)

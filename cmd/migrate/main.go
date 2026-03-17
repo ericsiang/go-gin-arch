@@ -5,19 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	validlang "self_go_gin/gin_application/validate_lang"
+
+	"self_go_gin/container"
 	"self_go_gin/infra/database/migrate"
 	"self_go_gin/infra/database/seeder"
-	"self_go_gin/infra/env"
-	"self_go_gin/infra/orm/gorm_mysql"
-	"self_go_gin/util/jwt_secret"
-
-	"github.com/gin-gonic/gin"
 )
 
 var (
-	serverEnv  = &env.ServerConfig{}
 	withSeeder = flag.Bool("with-seeder", false, "Run seeder after migration")
 )
 
@@ -38,7 +32,16 @@ func main() {
 	fmt.Println("Database Migration Tool")
 	fmt.Println("=================================")
 
-	initSetting()
+	// 1. 获取配置路径
+	configPath := os.Getenv("CONFIG_PATH")
+	fmt.Printf("Config path: %s\n", configPath)
+
+	// 2. 初始化容器（只需要数据库连接）
+	app := container.GetContainer()
+	if err := app.Initialize(configPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize application: %v\n", err)
+		os.Exit(1)
+	}
 
 	fmt.Println("Running database migration...")
 	migrate.Migrate() // migrate database
@@ -50,46 +53,12 @@ func main() {
 		fmt.Println("✓ Seeder completed successfully!")
 	}
 
+	// 4. 清理资源
+	if err := app.Shutdown(); err != nil {
+		fmt.Fprintf(os.Stderr, "Shutdown error: %v\n", err)
+	}
+
 	fmt.Println("=================================")
 	fmt.Println("All tasks completed!")
 	fmt.Println("=================================")
-	// httpServerRun()
-
-	//測試 log 切割
-	// for i := 0; i < 2000; i++ {
-	// 	wg.Add(2)
-	// 	go simpleHttpGet("www.baidu.com")
-	// 	go simpleHttpGet("https://www.baidu.com")
-	// }
-	// wg.Wait()
-}
-
-func initSetting() {
-	// 支持 Docker 環境和本地開發環境
-	configPath := os.Getenv("CONFIG_PATH")
-	fmt.Printf("Config path: %s\n", configPath)
-	serverEnv := env.GetConfigManager().GetServerEnv()
-	err := env.InitEnv(configPath)
-	if err != nil {
-		cfgFile := filepath.Join(configPath, "env.yaml")
-		fmt.Fprintf(os.Stderr, "配置初始化失败: %v\n", err)
-		fmt.Fprintf(os.Stderr, "期望的配置文件路径: %s\n", cfgFile)
-		os.Exit(1)
-	}
-	fmt.Printf("配置信息 : %+v\n", serverEnv)
-	gin.SetMode(serverEnv.AppMode)
-	gormysql.InitMysql(serverEnv)
-	// Redis is optional for migration
-	// redis.InitRedis(GetServerEnv)
-	jwtsecret.SetJwtSecret(serverEnv.JwtSecret)
-	// vaildate 中文化
-	if err := validlang.InitValidateLang("zh"); err != nil {
-		fmt.Fprintf(os.Stderr, "init trans failed, err:%v\n", err)
-		panic(err)
-	}
-}
-
-// GetServerEnv 獲取服務配置
-func GetServerEnv() *env.ServerConfig {
-	return serverEnv
 }

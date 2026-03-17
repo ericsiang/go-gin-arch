@@ -1,5 +1,5 @@
-// Package redis 提供 Redis 客戶端的初始化和訪問功能，使用 go-redis 庫來與 Redis 服務器進行通信。
-package redis
+// Package goredis 提供 Redis 客戶端的初始化和訪問功能，使用 go-redis 庫來與 Redis 服務器進行通信。
+package goredis
 
 import (
 	"context"
@@ -11,13 +11,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var redisClient *redis.Client
+
 
 // InitRedis 初始化 Redis 客戶端
-func InitRedis(serverEnv *env.ServerConfig) *redis.Client {
+func InitRedis(serverEnv *env.ServerConfig) (*redis.Client,error) {
 	redisConfig := serverEnv.Redis
 	redisAddr := redisConfig.Host + ":" + strconv.Itoa(redisConfig.Port)
-	redisClient = redis.NewClient(&redis.Options{
+	redisClient := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: redisConfig.Password,
 		DB:       0, // use default DB
@@ -26,15 +26,11 @@ func InitRedis(serverEnv *env.ServerConfig) *redis.Client {
 	ctx := context.Background()
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "redis connect failed, err:", err)
-		panic(err)
+		return nil, err
 	}
 
 	fmt.Println("redis client connect ping success")
 
-	return redisClient
+	return redisClient, nil
 }
 
-// GetRedisClient 返回 Redis 客戶端
-func GetRedisClient() *redis.Client {
-	return redisClient
-}

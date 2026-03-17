@@ -49,6 +49,7 @@ func InitEnv(envPath string) error {
 		v.SetConfigName("env")    // 檔名
 		v.SetConfigType("yaml")   // 格式
 		v.AddConfigPath("./conf") // 執行路徑下的 conf
+		v.AddConfigPath("../conf")
 		v.AddConfigPath("../../conf")
 	} else {
 		v.SetConfigFile(envPath + envFile)

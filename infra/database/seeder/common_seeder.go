@@ -2,19 +2,17 @@
 package seeder
 
 import (
+	"self_go_gin/container"
 	admin_model "self_go_gin/domains/admin/entity/model"
 	"self_go_gin/domains/common/valueobj"
 	user_model "self_go_gin/domains/user/entity/model"
-	gormysql "self_go_gin/infra/orm/gorm_mysql"
 	"strconv"
 )
 
 // CreateUser 創建用戶資料
 func CreateUser() {
-	db, err := gormysql.GetMysqlDB()
-	if err != nil {
-		panic(err)
-	}
+	app := container.GetContainer()
+	db := app.GetDB()
 	seeder := NewSeeder(db)
 	if err := seeder.Clear("users"); err != nil {
 		panic(err)
@@ -35,7 +33,7 @@ func CreateUser() {
 		users = append(users, user)
 	}
 
-	err = db.Create(&users).Error
+	err := db.Create(&users).Error
 	if err != nil {
 		panic("Seeder CreateUser() Create fail")
 	}
@@ -43,10 +41,8 @@ func CreateUser() {
 
 // CreateAdmin 創建管理員資料
 func CreateAdmin() {
-	db, err := gormysql.GetMysqlDB()
-	if err != nil {
-		panic(err)
-	}
+	app := container.GetContainer()
+	db := app.GetDB()
 	seeder := NewSeeder(db)
 	if err := seeder.Clear("admins"); err != nil {
 		panic(err)
@@ -67,7 +63,7 @@ func CreateAdmin() {
 		admins = append(admins, admin)
 	}
 
-	err = db.Create(&admins).Error
+	err := db.Create(&admins).Error
 	if err != nil {
 		panic("Seeder CreateUser() Create fail")
 	}

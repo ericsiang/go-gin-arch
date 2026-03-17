@@ -2,14 +2,20 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"self_go_gin/gin_application/api/v1/user/request"
+	"log"
+	"time"
 
+	"self_go_gin/container"
 	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/domains/user/entity/model"
+	"self_go_gin/domains/user/events"
 	"self_go_gin/domains/user/repository"
+	"self_go_gin/gin_application/api/v1/user/request"
 	"self_go_gin/gin_application/handler"
+	"self_go_gin/infra/event"
 	jwtsecret "self_go_gin/util/jwt_secret"
 
 	"gorm.io/gorm"
@@ -17,7 +23,8 @@ import (
 
 // UserService 用戶服務層
 type UserService struct {
-	repo repository.UserRepository
+	repo      repository.UserRepository
+	publisher event.Publisher
 }
 
 // NewUserService 創建用戶服務層
@@ -26,9 +33,11 @@ func NewUserService() (*UserService, error) {
 	if err != nil {
 		return nil, fmt.Errorf("UserService NewUserService(): %w", err)
 	}
-
+	app := container.GetContainer()
+	broker := app.GetEventBroker()
 	return &UserService{
-		repo: repo,
+		repo:      repo,
+		publisher: broker.Publisher(), // 使用工廠獲取事件發布器
 	}, nil
 }
 
@@ -65,6 +74,14 @@ func (s *UserService) CreateUser(req request.CreateUserRequest) (*model.User, er
 		return nil, fmt.Errorf("create user failed: %w", err)
 	}
 
+	// 發布用戶創建事件
+	if s.publisher != nil {
+		if err := s.publishUserCreatedEvent(context.Background(), createdUser); err != nil {
+			// 記錄錯誤但不阻止用戶創建流程
+			log.Printf("[UserService] Failed to publish user created event: %v", err)
+		}
+	}
+
 	return createdUser, nil
 }
 
@@ -97,4 +114,27 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	}
 
 	return &jwtToken, nil
+}
+
+// publishUserCreatedEvent 發布用戶創建事件
+func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *model.User) error {
+	payload := events.UserCreatedEventPayload{
+		UserID:   user.ID,
+		Account:  user.GetAccount(),
+		CreateAt: time.Now().Format(time.RFC3339),
+	}
+
+	evt, err := event.NewEvent(events.UserCreatedEventType, payload)
+	if err != nil {
+		return fmt.Errorf("failed to create event: %w", err)
+	}
+
+	evt.Source = "user-service"
+
+	if err := s.publisher.Publish(ctx, evt); err != nil {
+		return fmt.Errorf("failed to publish event: %w", err)
+	}
+
+	log.Printf("[UserService] User created event published: UserID=%d, Account=%s", user.ID, user.GetAccount())
+	return nil
 }

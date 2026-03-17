@@ -3,7 +3,7 @@ package dao
 
 import (
 	"fmt"
-	gormysql "self_go_gin/infra/orm/gorm_mysql"
+	"self_go_gin/container"
 	"self_go_gin/internal/dao"
 )
 
@@ -21,10 +21,8 @@ type userDaoImpl struct {
 
 // NewUserDao 創建用戶數據訪問對象
 func NewUserDao() (UserDaoInterface, error) {
-	db, err := gormysql.GetMysqlDB()
-	if err != nil {
-		return nil, fmt.Errorf("UserDao NewUserDao() GetMysqlDB fail : %w", err)
-	}
+	app :=container.GetContainer()
+	db :=app.GetDB()
 	return &userDaoImpl{
 		GenericDao: dao.NewGenericDAO[UserPO](db),
 	}, nil

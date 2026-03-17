@@ -2,8 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"self_go_gin/infra/cache/redis"
-
+	"self_go_gin/container"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis_rate/v10"
 )
@@ -11,7 +10,8 @@ import (
 // RateLimit 限流中間件
 func RateLimit(redisLimitKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		limiter := redis_rate.NewLimiter(redis.GetRedisClient())
+		redisClient := container.GetContainer().GetRedisClient()
+		limiter := redis_rate.NewLimiter(redisClient)
 		// 限制每秒 5 個 request
 		res, err := limiter.Allow(c, redisLimitKey, redis_rate.PerSecond(5))
 		if err != nil {

@@ -12,11 +12,12 @@ import (
 
 // MysqlConfig Mysql 數據庫配置
 type MysqlConfig struct {
-	Host     string `mapstructure:"host" json:"host"`
-	Port     int    `mapstructure:"port" json:"port"`
-	DBName   string `mapstructure:"dbName" json:"dbName"`
-	Username string `mapstructure:"userName" json:"userName"`
-	Password string `mapstructure:"password" json:"password"`
+	IsEnabled bool   `mapstructure:"isEnabled" json:"is_enabled"`
+	Host      string `mapstructure:"host" json:"host"`
+	Port      int    `mapstructure:"port" json:"port"`
+	DBName    string `mapstructure:"dbName" json:"dbName"`
+	Username  string `mapstructure:"userName" json:"userName"`
+	Password  string `mapstructure:"password" json:"password"`
 }
 
 // Validate 驗證 MySQL 配置
@@ -50,11 +51,12 @@ func (c *MysqlConfig) String() string {
 
 // MongoDBConfig  MongoDB 數據庫配置
 type MongoDBConfig struct {
-	Host     string `mapstructure:"host" json:"host"`
-	Port     int    `mapstructure:"port" json:"port"`
-	DBName   string `mapstructure:"dbName" json:"dbName"`
-	Username string `mapstructure:"userName" json:"userName"`
-	Password string `mapstructure:"password" json:"password"`
+	IsEnabled bool   `mapstructure:"isEnabled" json:"is_enabled"`
+	Host      string `mapstructure:"host" json:"host"`
+	Port      int    `mapstructure:"port" json:"port"`
+	DBName    string `mapstructure:"dbName" json:"dbName"`
+	Username  string `mapstructure:"userName" json:"userName"`
+	Password  string `mapstructure:"password" json:"password"`
 }
 
 // Validate 驗證 MongoDB 配置
@@ -64,6 +66,12 @@ func (c *MongoDBConfig) Validate() error {
 	}
 	if c.Port <= 0 || c.Port > 65535 {
 		return errors.New("mongodb port must be between 1 and 65535")
+	}
+	if c.DBName == "" {
+		return errors.New("mongodb database name is required")
+	}
+	if c.Username == "" {
+		return errors.New("mongodb username is required")
 	}
 	return nil
 }
@@ -76,10 +84,11 @@ func (c *MongoDBConfig) String() string {
 
 // RedisConfig  Redis 數據庫配置
 type RedisConfig struct {
-	Host     string `mapstructure:"host" json:"host"`
-	Port     int    `mapstructure:"port" json:"port"`
-	DBName   string `mapstructure:"dbName" json:"dbName"`
-	Password string `mapstructure:"password" json:"password"`
+	IsEnabled bool   `mapstructure:"isEnabled" json:"is_enabled"`
+	Host      string `mapstructure:"host" json:"host"`
+	Port      int    `mapstructure:"port" json:"port"`
+	DBName    string `mapstructure:"dbName" json:"dbName"`
+	Password  string `mapstructure:"password" json:"password"`
 }
 
 // Validate 驗證 Redis 配置
@@ -89,6 +98,9 @@ func (c *RedisConfig) Validate() error {
 	}
 	if c.Port <= 0 || c.Port > 65535 {
 		return errors.New("redis port must be between 1 and 65535")
+	}
+	if c.DBName == "" {
+		return errors.New("redis database name is required")
 	}
 	return nil
 }
@@ -101,12 +113,13 @@ func (c *RedisConfig) String() string {
 
 // ServerConfig 服務器配置
 type ServerConfig struct {
-	AppMode   string        `mapstructure:"APP_Mode" json:"APP_Mode"`
-	Port      int           `mapstructure:"Port" json:"Port"`
-	JwtSecret string        `mapstructure:"JwtSecret" json:"JwtSecret"`
-	MysqlDB   MysqlConfig   `mapstructure:"Mysql" json:"Mysql"`
-	Redis     RedisConfig   `mapstructure:"Redis" json:"Redis"`
-	MongoDB   MongoDBConfig `mapstructure:"MongoDB" json:"MongoDB"`
+	AppMode       string        `mapstructure:"APP_Mode" json:"APP_Mode"`
+	Port          int           `mapstructure:"Port" json:"Port"`
+	JwtSecret     string        `mapstructure:"JwtSecret" json:"JwtSecret"`
+	IsEventBroker bool          `mapstructure:"IsEventBroker" json:"IsEventBroker"`
+	MysqlDB       MysqlConfig   `mapstructure:"Mysql" json:"Mysql"`
+	Redis         RedisConfig   `mapstructure:"Redis" json:"Redis"`
+	MongoDB       MongoDBConfig `mapstructure:"MongoDB" json:"MongoDB"`
 }
 
 // NewServerConfig 創建一個空的服務器配置實例

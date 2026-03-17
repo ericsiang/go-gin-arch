@@ -3,7 +3,6 @@ package gormysql
 
 import (
 	"fmt"
-	"os"
 	"self_go_gin/infra/env"
 
 	"github.com/gin-gonic/gin"
@@ -14,10 +13,8 @@ import (
 	"moul.io/zapgorm2"
 )
 
-var db *gorm.DB
-
 // InitMysql 初始化 MySQL 資料庫連接
-func InitMysql(serverEnv *env.ServerConfig) {
+func InitMysql(serverEnv *env.ServerConfig) (*gorm.DB, error) {
 	var config *gorm.Config
 	gormZaplogger := zapgorm2.New(zap.L())
 	logger.Default.LogMode(logger.Error)
@@ -44,10 +41,9 @@ func InitMysql(serverEnv *env.ServerConfig) {
 	fmt.Printf("正在連接 MySQL: %s\n", mysqlConfig.String())
 
 	var err error
-	db, err = gorm.Open(mysql.Open(dsn), config)
+	db, err := gorm.Open(mysql.Open(dsn), config)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "mysql connect failed, err:", err)
-		panic(err)
+		return nil, fmt.Errorf("mysql connect failed, err: %w", err)
 	}
 
 	sqlDB, _ := db.DB()
@@ -55,12 +51,5 @@ func InitMysql(serverEnv *env.ServerConfig) {
 	sqlDB.SetMaxOpenConns(100)
 
 	fmt.Println("mysql connect success")
-}
-
-// GetMysqlDB 返回 MySQL 資料庫連接
-func GetMysqlDB() (*gorm.DB, error) {
-	if db == nil {
-		return nil, fmt.Errorf("MySQL database connection fail or not initialized")
-	}
 	return db, nil
 }

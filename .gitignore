@@ -11,6 +11,7 @@ _*
 dist
 *.ini
 /docs
+cmd/first_web_service/docs
 markdown.md
 tree.md
 
