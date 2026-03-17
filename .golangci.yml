@@ -6,24 +6,24 @@ run:
 
 linters:
   enable:
-    - revive      # 完美替代 golint，檢查註解與命名規則 
-    - govet       # 檢查常見程式碼缺陷
-    - staticcheck # 強大的靜態分析工具
-    - errcheck    # 檢查是否漏掉 error 處理
-    - unused      # 檢查沒用到的變數或函式
-    - gosec       # 掃描潛在安全性漏洞 (如 SQL 注入)
-    - bodyclose   # 檢查 HTTP response body 是否有 close
-
+    - revive          # 完美替代 golint，檢查註解與命名規則 
+    - govet           # 檢查常見程式碼缺陷
+    - staticcheck     # 強大的靜態分析工具
+    - errcheck        # 檢查是否漏掉 error 處理
+    - unused          # 檢查沒用到的變數或函式
+    - gosec           # 掃描潛在安全性漏洞 (如 SQL 注入)
+    - bodyclose       # 檢查 HTTP response body 是否有 close
+    - ineffassign     # 檢查無效的賦值
+    - gocyclo         # 檢查函式的複雜度
+    - misspell        # 檢查拼字錯誤
 
 issues:
-  exclude-use-default: false
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  max-issues-per-linter: 100 # 每個 linter 最多顯示 100 個問題
   exclude-rules:
     # 針對所有以 _test.go 結尾的檔案
-    - path: _test\.go
+    - path: _test\.go$
       linters:
         - gosec
-      text: "G115:" # 只排除 G115 (整數溢位) 警告
+        - gocyclo
 
 

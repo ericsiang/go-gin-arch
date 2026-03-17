@@ -13,7 +13,11 @@
 │       └── common_msg_id.go
 ├── conf                        => 放置環境變數設定檔案
 │   ├── env.docker.yaml.example
-│   └── env.yaml.example
+│   └── env.yaml.example
+├── container                   => 依賴注入容器層，統一管理所有組件的生命周期和依賴關係
+│   ├── app_container.go        => 應用容器核心（單例模式、線程安全）
+│   ├── infra_provider.go       => 基礎設施提供者（DB、Redis、EventBroker 等）
+│   └── README.md               => 容器層使用文檔
 ├── domains                     => 放置 domain 層的程式碼，依據功能分為不同的子目錄
 │   ├── admin                   => 後台管理員
 │   │   ├── entity              => 資料模型
@@ -29,6 +33,8 @@
 │       ├── entity              => 資料模型
 │       │   └── model           => 資料表結構的 struct
 │       │       └── users.go
+│       ├── events              => 用戶事件處理
+│       │   └── user_serv.go
 │       ├── repository          => 資料操作，負責使用 dao 進行資料操作
 │       │   ├── dao             => 資料存取層
 │       │   │   └── user_dao.go
@@ -49,6 +55,8 @@
 │   │           │   └── user_req.go
 │   │           ├── response
 │   │           │   └── user_resp.go
+│   │           ├── events     => 領域事件（Event-Driven）
+│   │           │   └── user_events.go  => 用戶事件定義和處理器
 │   │           └── users.go
 │   ├── handler                => 放置 gin 框架的 handler 程式碼
 │   │   ├── handleError.go
@@ -62,7 +70,7 @@
 │   │   ├── jwt_auth.go
 │   │   ├── opa_auth.go
 │   │   └── rate_limit.go
-│   ├── router                => 放置 gin 框架的 router
+│   ├── router                 => 放置 gin 框架的 router
 │   │   └── router.go
 │   └── validate_lang          => 放置 gin 框架的驗證語言設定
 │       └── validate_lang.go
@@ -81,10 +89,15 @@
 │   ├── env                    => 環境變數設定
 │   │   ├── config.go
 │   │   └── env.go
-│   ├── log                   => 日誌
+│   ├── event                   => 事件驅動架構基礎設施 
+│   │   ├── event.go            => 事件核心定義和接口
+│   │   ├── broker.go           => 事件代理器（EventBroker）
+│   │   ├── asynq_client.go     => Asynq 客戶端實現（Publisher）
+│   │   └── asynq_server.go     => Asynq 服務端實現（Subscriber）
+│   ├── log                     => 日誌
 │   │   └── zap_log
 │   │       └── logger.go
-│   └── orm                   => 資料庫 ORM
+│   └── orm                     => 資料庫 ORM
 │       └── gorm_mysql
 │           └── mysql.go
 ├── internal                    => 放置內部使用的程式碼，例如通用的 dao、model 等
@@ -130,17 +143,44 @@
 ### 專案介紹
 #### 這是一個基於 Go 語言開發的後端 web service 模板，旨在提供一個結構清晰、易於擴展和維護的代碼基礎，目前是搭配 Gin 框架構建，此結構有助於未來替換 Web 框架（例如從 Gin 換成 Echo），降低替換成本
 * 分層架構
-  * 採用 DDD (Domain-Driven Design) 思維
-  * 職責分離 Entity → Repository (DAO) → Service 三層分離
+  * 初始容器層 (Container)
+      * 統一管理所有依賴實例（DB、Redis、EventBroker 等）
+      * 單例模式保證全局唯一容器實例
+      * 線程安全（使用 sync.RWMutex）
+    * 生命周期管理
+      * `Initialize()` - 統一初始化所有基礎設施
+      * `Shutdown()` - 優雅關閉所有資源
+    * 基礎設施組件初始化（MySQL、Redis、EventBroker、JWT、Validator）
+    * 優勢
+      * 解耦：各層通過容器獲取依賴，避免直接依賴
+      * 易維護：依賴管理集中，修改配置只需調整容器層
+      * 可擴展：輕鬆添加新的基礎設施組件
+
+  * 採用 DDD (Domain-Driven Design) 思維，清晰的職責分離與職權域邊界
+  * 完整的分層架構設計 (Entity → ValueObject → Service → Repository → DAO → Service)
+    * Entity 層（聚合根）**
+      * 建立實體聚合根，包含身份與狀態
+      * ValueObject 驗證：內置值物件進行數據驗證和加密（如 Account、Password）
+    * Service 層
+      * 應用層邏輯協調（事務邊界、流程編排、複雜業務流程）
+      * 調用 Repository 進行數據操作
+    * Repository 層
+      * 領域模型（Domain Model）與持久化模型（PO）之間的轉換
+      * cache 的調用也在這層
+      * 隱藏所有數據庫實現細節，對上層提供純粹的領域模型
+      * DAO 層
+        * 純粹的數據庫操作，直接使用 GORM 和 PO（持久化物件）
+        * 不了解業務邏輯，只執行 SQL 操作
   * 符合關注點分離原則
   * 可維護性高，修改業務邏輯只需動 domains 資料夾
   
 * 基礎設施
-  * 配置管理
+  * 環境配置管理(Viper)
   * 日誌系統 (Zap)
   * 快取機制 (Redis)
-  * 資料庫遷移和種子資料
- 
+  * 資料庫遷移和種子資料 (migrate、seeder)
+  * 事件驅動架構 (Event-Driven 透過環境設定檔控制是否使用) [架構說明](./asset/markdown/event-driven.md)
+
 * 安全性考量
   * JWT 認證
   * OPA 權限控制
@@ -167,9 +207,9 @@
   
 * 容器化部署
   * 透過 docker 快速建立容器
-  
+
 ### 架構圖結構
-#### HTTP 請求處理流程
+#### HTTP 請求處理流程 (DDD 分層架構)
 ``` mermaid
 graph LR
     Client((用戶端)) -->|HTTP Request| Router["Router<br/>路由匹配"]
@@ -178,13 +218,16 @@ graph LR
     
     Middleware --> Controller["Controller<br/>參數驗證與轉換"]
     
-    Controller --> Service["Service<br/>業務邏輯處理"]
+    Controller --> Service["ApplicationService<br/>事務/流程協調/業務規則檢查"]
     
-    Service --> Repository["Repository/DAO<br/>資料存取操作"]
+    Service --> Repository["Repository<br/>領域模型 ↔ PO 轉換"]
     
-    Repository --> Database[("Database<br/>MySQL/Redis")]
+    Repository --> DAO["DAO<br/>純粹數據庫操作"]
     
-    Database --> Repository
+    DAO --> Database[("Database<br/>MySQL/Redis")]
+    
+    Database --> DAO
+    DAO --> Repository
     Repository --> Service
     Service --> Controller
     Controller --> Response["Response<br/>統一格式輸出"]
@@ -216,6 +259,94 @@ graph TB
     
     GinApp -.-> Replace
     Replace -.-> EchoApp
+    
+```
+
+#### 事件驅動架構流程
+``` mermaid
+graph TB
+    subgraph Service ["業務服務層"]
+        UserService["UserService<br/>用戶服務"]
+    end
+    
+    subgraph EventPublish ["事件發佈"]
+        Publisher["EventPublisher<br/>事件發佈者"]
+        EventBroker["EventBroker<br/>事件代理器"]
+    end
+    
+    subgraph Queue ["消息隊列 (Asynq/Redis)"]
+        RedisQueue[("Redis Queue<br/>事件隊列")]
+    end
+    
+    subgraph EventWorker ["事件處理服務 (獨立進程)"]
+        Subscriber["EventSubscriber<br/>事件訂閱者"]
+        Handler1["UserCreatedHandler<br/>用戶創建事件處理器"]
+        Handler2["UserUpdatedHandler<br/>用戶更新事件處理器"]
+        Handler3["UserDeletedHandler<br/>用戶刪除事件處理器"]
+    end
+    
+    subgraph Actions ["異步操作"]
+        SendEmail["發送郵件"]
+        SyncData["同步數據"]
+        UpdateCache["更新緩存"]
+        Logging["記錄日誌"]
+    end
+    
+    UserService -->|1. 業務操作完成| Publisher
+    Publisher -->|2. 發佈事件| EventBroker
+    EventBroker -->|3. 寫入隊列| RedisQueue
+    
+    RedisQueue -->|4. 消費事件| Subscriber
+    Subscriber -->|5. 分發事件| Handler1
+    Subscriber -->|5. 分發事件| Handler2
+    Subscriber -->|5. 分發事件| Handler3
+    
+    Handler1 -->|6. 執行操作| SendEmail
+    Handler2 -->|6. 執行操作| SyncData
+    Handler3 -->|6. 執行操作| UpdateCache
+    Handler3 -->|6. 執行操作| Logging
+        
+```
+
+
+
+#### 容器層依賴注入架構
+``` mermaid
+graph TB
+    subgraph AppStart ["應用啟動流程"]
+        Main["main.go"] --> Container["Container.Initialize()"]
+    end
+    
+    subgraph ContainerLayer ["Container 容器層"]
+        Container --> ConfigLoad["載入配置<br/>env.InitEnv()"]
+        ConfigLoad --> InfraInit["初始化基礎設施<br/>InfraProvider"]
+        
+        InfraInit --> MySQL["MySQL<br/>gormysql.InitMysql()"]
+        InfraInit --> Redis["Redis<br/>redis.InitRedis()"]
+        InfraInit --> EventBroker["EventBroker<br/>event.NewEventBroker()"]
+        InfraInit --> Common["通用組件<br/>JWT / Validator"]
+    end
+    
+    subgraph Usage ["各層使用容器"]
+        Controller["Controller"] --> GetContainer["container.GetContainer()"]
+        Service["Service"] --> GetContainer
+        Repository["Repository"] --> GetContainer
+        
+        GetContainer --> GetDB["app.GetDB()"]
+        GetContainer --> GetRedis["app.GetRedisClient()"]
+        GetContainer --> GetBroker["app.GetEventBroker()"]
+        GetContainer --> GetConfig["app.GetConfig()"]
+    end
+    
+    subgraph Shutdown ["優雅關閉"]
+        Signal["收到關閉信號"] --> AppShutdown["app.Shutdown()"]
+        AppShutdown --> CloseDB["關閉數據庫連接"]
+        AppShutdown --> CloseBroker["關閉事件代理"]
+        AppShutdown --> CleanRes["清理其他資源"]
+    end
+    
+    ContainerLayer --> Usage
+    Usage --> Shutdown
     
 ```
 
@@ -287,5 +418,10 @@ graph TB
         <td><a href="https://github.com/swaggo/gin-swagger" target="_blank">gin-swagger</a></td>
         <td>gin swagger 產生 API docs</td>
         <td> <a href="./asset/markdown/swagger.md" target="_blank">open</a> </td>
+    </tr>
+    <tr>
+        <td><a href="https://github.com/hibiken/asynq" target="_blank">asynq</a></td>
+        <td>基於 Redis 的分布式任務隊列和異步處理庫，用於實現事件驅動架構</td>
+        <td> - </td>
     </tr>
 </table>
