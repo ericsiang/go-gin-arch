@@ -40,12 +40,11 @@ func NewUserService() (*UserService, error) {
 			repo:      repo,
 			publisher: broker.Publisher(), // 使用工廠獲取事件發布器
 		}, nil
-	}else{
-		return &UserService{
-			repo:      repo,
-		}, nil
 	}
 
+	return &UserService{
+		repo:      repo,
+	}, nil
 }
 
 // CreateUser 創建用戶

@@ -68,7 +68,7 @@ type Subscriber interface {
 	// Run 運行訂閱者（阻塞）
 	Run() error
 	// Shutdown 優雅關閉訂閱者
-	Shutdown()
+	Shutdown(ctx context.Context) error
 }
 
 

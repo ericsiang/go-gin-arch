@@ -7,11 +7,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	constset "self_go_gin/common/const"
 	"self_go_gin/container"
+
 	"self_go_gin/gin_application/router"
 	"strconv"
 	"syscall"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // @title  Self go gin Swagger API
@@ -52,7 +56,7 @@ func httpServerRun(app *container.AppContainer) {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// 设置路由
-	router := router.Router(quit)
+	router := router.Router()
 	config := app.GetConfig()
 
 	addr := ":" + strconv.Itoa(config.Port)
@@ -80,25 +84,45 @@ func httpServerRun(app *container.AppContainer) {
 	// 等待中断信号或服务器错误
 	sig := <-quit
 	// 接收到关闭信号
-	fmt.Printf("\n Received signal: %s\n", sig)
+	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("Received signal: %s\n", sig)
 	fmt.Println("Initiating graceful shutdown...")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
-	// 优雅关闭（5秒超时）
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 優雅關閉流程
+	gracefulShutdown(srv, app)
+
+	fmt.Println("\n Server exited gracefully")
+}
+
+// gracefulShutdown 執行優雅關閉流程
+func gracefulShutdown(srv *http.Server, app *container.AppContainer) {
+	fmt.Println("Starting graceful shutdown...")
+	// 創建關閉上下文（設定超時時間）
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), constset.ShutdownTimeout)
 	defer shutdownCancel()
 
-	// 关闭 HTTP 服务器
-	fmt.Println("Shutting down HTTP server...")
+	// 停止接受新 request ，並在 shutdownCtx 超時時間內等待已接收的request 請求完成
+	fmt.Println("Stopping accepting new connections and waiting for active requests to complete...")
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		fmt.Fprintf(os.Stderr, "Server shutdown error: %v\n", err)
+		zap.L().Error("HTTP server shutdown error", zap.Error(err))
 	} else {
-		fmt.Println("HTTP Server shutdown completed")
+		fmt.Println("HTTP Server shutdown completed (all requests drained)")
 	}
-
-	// 清理资源（通过容器统一管理）
-	if err := app.Shutdown(); err != nil {
+	fmt.Println("Cleaning up application resources...")
+	if err := app.Shutdown(shutdownCtx); err != nil {
 		fmt.Fprintf(os.Stderr, "Resource cleanup error: %v\n", err)
+		zap.L().Error("Resource cleanup error", zap.Error(err))
+	} else {
+		fmt.Println("All resources cleaned up")
 	}
 
-	fmt.Println("Server exited gracefully")
+	fmt.Println("Flushing logs...")
+	if err := zap.L().Sync(); err != nil {
+		// 在某些環境（如 stdout/stderr）中 Sync 可能會返回錯誤，這是正常的
+		fmt.Printf("Log sync warning: %v (this is usually harmless)\n", err)
+	} else {
+		fmt.Println("Logs flushed")
+	}
 }

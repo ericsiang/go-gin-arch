@@ -101,9 +101,11 @@ func (s *AsynqServer) Start() error {
 }
 
 // Shutdown 優雅關閉服務器
-func (s *AsynqServer) Shutdown() {
-	fmt.Println("Shutting down Asynq event server...")
+func (s *AsynqServer) Shutdown(ctx context.Context) error {
+	<-ctx.Done()
+	fmt.Println("Asynq server shutdown")
 	s.server.Shutdown()
+	return nil
 }
 
 // Run 運行服務器（阻塞方法）

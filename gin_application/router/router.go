@@ -4,16 +4,16 @@ package router
 import (
 	"os"
 	"path/filepath"
+	"self_go_gin/container"
+	"self_go_gin/domains/user/events"
 	v1_admin "self_go_gin/gin_application/api/v1/admin"
 	v1_user "self_go_gin/gin_application/api/v1/user"
 	middleware "self_go_gin/gin_application/middleware"
+	"self_go_gin/infra/event"
 	"self_go_gin/infra/log/zaplog"
 	"time"
 
-	// "strconv"
-
 	_ "self_go_gin/cmd/first_web_service/docs" // Swagger 文档生成需要导入
-	"syscall"
 
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
@@ -24,6 +24,8 @@ import (
 )
 
 func setDefaultMiddlewares(router *gin.Engine) {
+	// Trace 中間件（確保所有請求都有 ID）
+	router.Use(middleware.TraceMiddleware())
 	// 獲取當前工作目錄並構建 log 路徑
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -41,20 +43,17 @@ func setDefaultMiddlewares(router *gin.Engine) {
 		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Content-Type", "Authorization", "Access-Control-Allow-Origin"},
 	})) //跨域請求的中間件
-
-	// Trace 中間件（確保所有請求都有 ID）
-	router.Use(middleware.TraceMiddleware())
 }
 
 // Router 路由
-func Router(quit chan os.Signal) *gin.Engine {
+func Router() *gin.Engine {
 	router := gin.New()
 	setDefaultMiddlewares(router)
 	registerSwagger(router)
 	apiV1Group := router.Group("/api/v1")
 	router.POST("createUser", v1_user.CreateUser)
 	setNoAuthRoutes(apiV1Group)
-	setAuthRoutes(apiV1Group, quit)
+	setAuthRoutes(apiV1Group)
 	return router
 }
 
@@ -68,6 +67,14 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 	apiV1UsersGroup := apiV1Group.Group("/users")
 	apiV1AdminsGroup := apiV1Group.Group("/admins")
 
+	// Health check endpoint
+	apiV1Group.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":    "healthy",
+			"timestamp": time.Now().Format(time.RFC3339),
+		})
+	})
+
 	// apiV1Group.Use(middleware.RateLimit("test-limit")).GET("/limit_ping", func(c *gin.Context) {
 	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
 	// })
@@ -75,7 +82,7 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
 	// })
 
-	apiV1Group.GET("/logtest", func(*gin.Context) {
+	apiV1Group.GET("/logtest", func(_ *gin.Context) {
 		test := true
 		if test {
 			zap.L().Info("Logger  Success..",
@@ -89,7 +96,7 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 	Login(apiV1UsersGroup, apiV1AdminsGroup)
 }
 
-func setAuthRoutes(apiV1Group *gin.RouterGroup, quit chan os.Signal) {
+func setAuthRoutes(apiV1Group *gin.RouterGroup) {
 	// apiV1AuthGroup := apiV1Group.Group("/auth")
 	apiV1Group.Use(middleware.JwtAuthMiddleware())
 
@@ -99,7 +106,7 @@ func setAuthRoutes(apiV1Group *gin.RouterGroup, quit chan os.Signal) {
 
 	// Admins
 	apiV1AuthAdminsGroup := apiV1Group.Group("/admins")
-	Admins(apiV1AuthAdminsGroup, quit)
+	Admins(apiV1AuthAdminsGroup)
 
 }
 
@@ -119,20 +126,29 @@ func Users(router *gin.RouterGroup) {
 }
 
 // Admins 管理員
-func Admins(router *gin.RouterGroup, quit chan os.Signal) {
+func Admins(router *gin.RouterGroup) {
 	router.GET("/:filterAdminsID", v1_admin.GetAdminsByID)
-	Shutdown(router, quit)
+	Shutdown(router)
 }
 
-// Shutdown 優雅關閉服務
-func Shutdown(router *gin.RouterGroup, quit chan os.Signal) {
-	router.GET("/shutdown", func(c *gin.Context) {
-		quit <- syscall.SIGINT
-		c.String(200, "shutdown")
-	})
-
+// Shutdown 優雅關閉服務測試
+func Shutdown(router *gin.RouterGroup) {
 	router.GET("/slow_test", func(c *gin.Context) {
-		time.Sleep(5 * time.Second) // 模拟慢速API
+		time.Sleep(5 * time.Second) // 模擬慢速API
+		app := container.GetContainer()
+		if app.GetConfig().IsEventBroker {
+			broker := app.GetEventBroker()
+			if broker.Publisher() != nil {
+				payload := events.UserCreatedEventPayload{
+					UserID:   1234,
+					Account:  "slow_test_user",
+					CreateAt: time.Now().Format(time.RFC3339),
+				}
+				evt, _ := event.NewEvent(events.UserCreatedEventType, payload)
+				evt.Source = "slow-test"
+				broker.Publisher().Publish(c, evt);
+			}
+		}
 		zap.L().Info("慢速API完成")
 		c.String(200, "shutdown slow test")
 	})

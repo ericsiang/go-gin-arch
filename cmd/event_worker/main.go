@@ -9,9 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	constset "self_go_gin/common/const"
 	"self_go_gin/container"
 	"self_go_gin/domains/user/events"
 	"self_go_gin/infra/event"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -37,37 +40,64 @@ func main() {
 		log.Fatalf("Failed to register event handlers: %v", err)
 	}
 
-	// 5. 设置优雅关闭
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// 6. 监听系统信号
+	// 5. 监听系统信号
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// 7. 在 goroutine 中启动服务器
+	// 6. 在 goroutine 中启动服务器
 	go func() {
 		if err := subscriber.Run(); err != nil {
 			log.Printf("Event server stopped with error: %v", err)
 		}
 	}()
 
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println("Event worker server is running...")
-	fmt.Println("Broker type: Asynq (Redis-based)")
 	fmt.Println("Press Ctrl+C to stop")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	// 8. 等待关闭信号
-	<-sigChan
-	fmt.Println("\nReceived shutdown signal")
-	subscriber.Shutdown()
+	// 7. 等待关闭信号
+	sig := <-sigChan
+	fmt.Printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	fmt.Printf("Received signal: %s\n", sig)
+	fmt.Println("Initiating graceful shutdown...")
+	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
 
-	// 9. 清理容器资源
-	if err := app.Shutdown(); err != nil {
-		log.Printf("Shutdown error: %v", err)
+	// 執行優雅關閉
+	gracefulShutdownWorker(subscriber, app)
+
+	fmt.Println("\nEvent worker server stopped gracefully")
+}
+
+// gracefulShutdownWorker 執行 event worker 的優雅關閉流程
+func gracefulShutdownWorker(subscriber event.Subscriber, app *container.AppContainer) {
+	fmt.Println("Graceful Shutdown ...")
+	// 創建關閉上下文（總超時時間 30 秒）
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), constset.ShutdownTimeout)
+	defer shutdownCancel()
+
+	fmt.Println("Stopping event subscriber...")
+	if err := subscriber.Shutdown(shutdownCtx); err != nil {
+		fmt.Printf("Subscriber shutdown warning: %v\n", err)
+		zap.L().Warn("Event subscriber shutdown warning", zap.Error(err))
+	} else {
+		fmt.Println("Event subscriber stopped")
 	}
 
-	<-ctx.Done()
-	fmt.Println("Event worker server stopped gracefully")
+	fmt.Println("Cleaning up application resources...")
+	if err := app.Shutdown(shutdownCtx); err != nil {
+		fmt.Fprintf(os.Stderr, "Resource cleanup error: %v\n", err)
+		zap.L().Error("Resource cleanup error", zap.Error(err))
+	} else {
+		fmt.Println("All resources cleaned up")
+	}
+	
+	fmt.Println("Flushing logs...")
+	if err := zap.L().Sync(); err != nil {
+		fmt.Printf("Log sync warning: %v (this is usually harmless)\n", err)
+	} else {
+		fmt.Println("Logs flushed")
+	}
 }
 
 // registerEventHandlers 註冊所有事件處理器

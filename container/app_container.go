@@ -2,6 +2,7 @@
 package container
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -20,7 +21,7 @@ type AppContainer struct {
 	config *env.ServerConfig
 	// 基础设施
 	db          *gorm.DB
-	redisClient *redis.Client 
+	redisClient *redis.Client
 	eventBroker *event.Broker
 	// 其他通用实例可以在此添加
 	// 例如: logger, metrics, tracer 等
@@ -78,7 +79,7 @@ func (c *AppContainer) initInfrastructure() error {
 			return fmt.Errorf("mysql db instance is nil")
 		}
 		c.db = db
-	}else{
+	} else {
 		fmt.Println("MySQL is not enabled by env")
 	}
 
@@ -92,7 +93,7 @@ func (c *AppContainer) initInfrastructure() error {
 			return fmt.Errorf("redis client instance is nil")
 		}
 		c.redisClient = redisClient
-	}else{
+	} else {
 		fmt.Println("Redis is not enabled by env")
 	}
 
@@ -108,7 +109,7 @@ func (c *AppContainer) initInfrastructure() error {
 		c.eventBroker = broker
 		fmt.Println("Event broker ready (Publisher only)")
 		fmt.Println("Note: To process events, run the event_worker service")
-	}else{
+	} else {
 		fmt.Println("EventBroker is not enabled by env")
 	}
 
@@ -116,7 +117,7 @@ func (c *AppContainer) initInfrastructure() error {
 }
 
 // Shutdown 优雅关闭所有资源
-func (c *AppContainer) Shutdown() error {
+func (c *AppContainer) Shutdown(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -126,10 +127,17 @@ func (c *AppContainer) Shutdown() error {
 
 	// 关闭事件代理
 	if c.eventBroker != nil {
-		if err := c.eventBroker.Close(); err != nil {
+		if err := c.eventBroker.Close(ctx); err != nil {
 			errs = append(errs, fmt.Errorf("failed to close event broker: %w", err))
+		}
+	}
+
+	// 关闭 Redis 连接
+	if c.redisClient != nil {
+		if err := c.redisClient.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("failed to close redis client: %w", err))
 		} else {
-			fmt.Println("Event broker closed")
+			fmt.Println("Redis client closed")
 		}
 	}
 

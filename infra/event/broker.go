@@ -2,6 +2,7 @@
 package event
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -82,7 +83,7 @@ func (b *Broker) BrokerType() BrokerType {
 }
 
 // Close 關閉事件代理
-func (b *Broker) Close() error {
+func (b *Broker) Close(ctx context.Context) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -96,7 +97,9 @@ func (b *Broker) Close() error {
 	}
 
 	if b.subscriber != nil {
-		b.subscriber.Shutdown()
+		if err := b.subscriber.Shutdown(ctx); err != nil {
+			errs = append(errs, fmt.Errorf("failed to shutdown subscriber: %w", err))
+		}
 		b.subscriber = nil
 	}
 

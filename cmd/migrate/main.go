@@ -2,10 +2,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 
+	constset "self_go_gin/common/const"
 	"self_go_gin/container"
 	"self_go_gin/infra/database/migrate"
 	"self_go_gin/infra/database/seeder"
@@ -54,7 +56,9 @@ func main() {
 	}
 
 	// 4. 清理资源
-	if err := app.Shutdown(); err != nil {
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), constset.ShutdownTimeout)
+	defer shutdownCancel()
+	if err := app.Shutdown(shutdownCtx); err != nil {
 		fmt.Fprintf(os.Stderr, "Shutdown error: %v\n", err)
 	}
 
