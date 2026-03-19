@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	ginresp "self_go_gin/gin_application/inter/response"
 
 	"net/http"
-	"self_go_gin/gin_application/inter/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -27,7 +27,7 @@ var (
 // GetHandler 處理獲取請求
 func GetHandler(ctx *gin.Context, err error) (bool, error) {
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
 		return false, fmt.Errorf("GetHandler() \n %w", err)
 	}
 	return true, nil
@@ -40,7 +40,7 @@ func CreateHandler(ctx *gin.Context, err error) (bool, error) {
 		if mysqlErrorCheck {
 			return false, fmt.Errorf("CreateHandler() \n %w", err)
 		}
-		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
 		return false, fmt.Errorf("CreateHandler() \n %w", err)
 
 	}
@@ -51,7 +51,7 @@ func CreateHandler(ctx *gin.Context, err error) (bool, error) {
 func UpdateHandler(ctx *gin.Context, err error) (bool, error) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, response.FailResponse{
+			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: "record_not_found",
 			})
 			return false, fmt.Errorf("UpdateHandler() \n %w", err)
@@ -60,7 +60,7 @@ func UpdateHandler(ctx *gin.Context, err error) (bool, error) {
 		if mysqlErrorCheck {
 			return false, fmt.Errorf("UpdateHandler() \n %w", err)
 		}
-		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
 		return false, fmt.Errorf("UpdateHandler() \n %w", err)
 
 	}
@@ -71,22 +71,22 @@ func UpdateHandler(ctx *gin.Context, err error) (bool, error) {
 func DeleteHandler(ctx *gin.Context, err error) (bool, error) {
 	if err != nil {
 		if errors.Is(err, ErrDeleteNotAllow) {
-			ctx.JSON(http.StatusAccepted, response.FailResponse{
+			ctx.JSON(http.StatusAccepted, ginresp.FailResponse{
 				Msg: ErrDeleteNotAllow.Error(),
 			})
 			return false, fmt.Errorf("DeleteHandler() \n %w", err)
 		} else if errors.Is(err, gorm.ErrRecordNotFound) {
-			ctx.JSON(http.StatusNotFound, response.FailResponse{
+			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: "record_not_found",
 			})
 			return false, fmt.Errorf("DeleteHandler() \n %w", err)
 		} else if errors.Is(err, ErrResourceNotFound) {
-			ctx.JSON(http.StatusNotFound, response.FailResponse{
+			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: ErrResourceNotFound.Error(),
 			})
 			return false, fmt.Errorf("DeleteHandler() \n %w", err)
 		}
-		ctx.JSON(http.StatusInternalServerError, response.FailResponse{})
+		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
 		return false, fmt.Errorf("DeleteHandler() \n %w", err)
 
 	}

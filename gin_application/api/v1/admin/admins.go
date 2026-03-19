@@ -10,7 +10,7 @@ import (
 	"self_go_gin/gin_application/api/v1/admin/response"
 	"self_go_gin/gin_application/handler"
 	ginlogger "self_go_gin/gin_application/inter/log"
-	ginresp "self_go_gin/util/gin_response"
+	ginresp "self_go_gin/gin_application/inter/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"

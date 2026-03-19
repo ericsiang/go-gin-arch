@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"self_go_gin/common/msgid"
-	"self_go_gin/util/gin_response"
-	"self_go_gin/util/mysql_manager"
+	ginresp "self_go_gin/gin_application/inter/response"
+
+	mysqlmgr "self_go_gin/util/mysql_manager"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

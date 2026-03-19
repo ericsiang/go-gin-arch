@@ -3,9 +3,8 @@ package handler
 import (
 	"net/http"
 	"self_go_gin/common/msgid"
+	ginresp "self_go_gin/gin_application/inter/response"
 	validlang "self_go_gin/gin_application/validate_lang"
-
-	"self_go_gin/util/gin_response"
 
 	"github.com/gin-gonic/gin"
 )
