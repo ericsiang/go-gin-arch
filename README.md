@@ -143,7 +143,7 @@
 ### 專案介紹
 #### 這是一個基於 Go 語言開發的後端 web service 模板，旨在提供一個結構清晰、易於擴展和維護的代碼基礎，目前是搭配 Gin 框架構建，此結構有助於未來替換 Web 框架（例如從 Gin 換成 Echo），降低替換成本
 * 分層架構
-  * 初始容器層 (Container)
+  * 初始化容器層 (Container)
       * 統一管理所有依賴實例（DB、Redis、EventBroker 等）
       * 單例模式保證全局唯一容器實例
       * 線程安全（使用 sync.RWMutex）
@@ -189,6 +189,7 @@
 * Web 框架 (gin_application)
   * router
   * 中間件
+    * 全域追蹤機制 (Trace-ID)
     * 限流機制
     * JWT 認證機制
     * 權限驗證機制
@@ -200,7 +201,11 @@
   * Swagger 文檔支援
   * 測試檔案配置 
   * gin 框架相關程式碼集中於 /gin_application 
-  * 可擴展性高，可輕鬆添加新的功能模組 （ EX：新增 MongoDB ） 
+  * 可擴展性高，可輕鬆添加新的功能模組
+
+* 可觀測性設計  
+  * 全域追蹤 (Tracing)： Middleware 自動為每個 Request 生成 Trace-ID 並注入 Context，確保跨層級 Log 關聯，方便未來追蹤
+  * 結構化日誌 (Structured Logging)： 整合 Zap Logger 並區分 Info 與 Error 級別
   
 * 優化功能
   * Graceful Shutdown： 停止收request，等待所有連線處理結束
@@ -310,7 +315,7 @@ graph TB
 
 
 
-#### 容器層依賴注入架構
+#### 初始化容器層架構
 ``` mermaid
 graph TB
     subgraph AppStart ["應用啟動流程"]
@@ -319,7 +324,7 @@ graph TB
     
     subgraph ContainerLayer ["Container 容器層"]
         Container --> ConfigLoad["載入配置<br/>env.InitEnv()"]
-        ConfigLoad --> InfraInit["初始化基礎設施<br/>InfraProvider"]
+        ConfigLoad --> InfraInit["初始化基礎設施<br/>initInfrastructure"]
         
         InfraInit --> MySQL["MySQL<br/>gormysql.InitMysql()"]
         InfraInit --> Redis["Redis<br/>redis.InitRedis()"]
@@ -340,8 +345,9 @@ graph TB
     
     subgraph Shutdown ["優雅關閉"]
         Signal["收到關閉信號"] --> AppShutdown["app.Shutdown()"]
-        AppShutdown --> CloseDB["關閉數據庫連接"]
+        AppShutdown --> CloseBroker["關閉 redis 連接"]
         AppShutdown --> CloseBroker["關閉事件代理"]
+        AppShutdown --> CloseDB["關閉數據庫連接"]
         AppShutdown --> CleanRes["清理其他資源"]
     end
     
