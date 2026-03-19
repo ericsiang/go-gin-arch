@@ -41,7 +41,7 @@ COPY --from=builder /app/bin/first_web_service /app/first_web_service
 COPY --from=builder /app/bin/migrate /app/migrate
 
 # 複製配置文件
-COPY conf /app/conf
+# COPY conf /app/conf
 
 # 複製 log 目錄（如果需要）
 RUN mkdir -p /app/log/info /app/log/error
