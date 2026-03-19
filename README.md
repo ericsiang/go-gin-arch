@@ -345,7 +345,7 @@ graph TB
     
     subgraph Shutdown ["優雅關閉"]
         Signal["收到關閉信號"] --> AppShutdown["app.Shutdown()"]
-        AppShutdown --> CloseBroker["關閉 redis 連接"]
+        AppShutdown --> CloseRedis["關閉 redis 連接"]
         AppShutdown --> CloseBroker["關閉事件代理"]
         AppShutdown --> CloseDB["關閉數據庫連接"]
         AppShutdown --> CleanRes["清理其他資源"]
