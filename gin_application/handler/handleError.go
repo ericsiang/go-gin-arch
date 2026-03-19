@@ -17,13 +17,13 @@ import (
 func HandleError(context *gin.Context, err error) (bool, error) {
 	switch {
 	case mysqlmgr.MysqlErrCode(err) == mysqlmgr.DuplicateEntryCode:
-		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.DuplicateEntry, nil)
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "資源重複", msgid.DuplicateEntry, nil)
 		return false, fmt.Errorf("HandlerError() DuplicateEntryCode : %w", err)
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		ginresp.ErrorResponse(context, http.StatusNotFound, "", msgid.NoContent, nil)
+		ginresp.ErrorResponse(context, http.StatusNotFound, "資源不存在", msgid.NoContent, nil)
 		return false, fmt.Errorf("HandlerError() ErrRecordNotFound : %w", err)
 	case errors.Is(err, ErrResourceExist):
-		ginresp.ErrorResponse(context, http.StatusBadRequest, "", msgid.ResourceExist, nil)
+		ginresp.ErrorResponse(context, http.StatusBadRequest, "資源已存在", msgid.ResourceExist, nil)
 		return false, fmt.Errorf("HandlerError() ErrResourceExist : %w", err)
 	case err != nil:
 		ginresp.ErrorResponse(context, http.StatusInternalServerError, "", msgid.Fail, nil)

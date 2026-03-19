@@ -9,11 +9,11 @@ import (
 	"self_go_gin/domains/user/service"
 	"self_go_gin/gin_application/api/v1/user/request"
 	"self_go_gin/gin_application/handler"
-	"self_go_gin/util/gin_response"
+	ginlogger "self_go_gin/gin_application/inter/log"
+	ginresp "self_go_gin/util/gin_response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"go.uber.org/zap"
 )
 
 // CreateUser 創建用戶
@@ -38,22 +38,22 @@ func CreateUser(ctx *gin.Context) {
 			return
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		zap.L().Error("\n Api CreateUser() 失敗(ShouldBindBodyWith fail) : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() ShouldBindBodyWith fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
-		zap.L().Error("\n Api CreateUser() NewUserService fail : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewUserService fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	_, err = userService.CreateUser(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		zap.L().Error("\n Api CreateUser() \n " + err.Error())
-		return
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() CreateUser fail", err)
+		return	
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", nil, msgid.Success)
 }
@@ -78,21 +78,21 @@ func UserLogin(ctx *gin.Context) {
 			return
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		zap.L().Error("\n Api UserLogin() 失敗(ShouldBindBodyWith fail) : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() ShouldBindBodyWith fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
-		zap.L().Error("\n Api UserLogin() NewUserService fail : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewUserService fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	jwtToken, err := userService.CheckLogin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		zap.L().Error("\n Api UserLogin() \n " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin()", err)
 		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", ginresp.CreateMsgData("jwt_token", *jwtToken), msgid.Success)

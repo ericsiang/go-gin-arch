@@ -34,11 +34,18 @@ func NewUserService() (*UserService, error) {
 		return nil, fmt.Errorf("UserService NewUserService(): %w", err)
 	}
 	app := container.GetContainer()
-	broker := app.GetEventBroker()
-	return &UserService{
-		repo:      repo,
-		publisher: broker.Publisher(), // 使用工廠獲取事件發布器
-	}, nil
+	if app.GetConfig().IsEventBroker {
+		broker := app.GetEventBroker()
+		return &UserService{
+			repo:      repo,
+			publisher: broker.Publisher(), // 使用工廠獲取事件發布器
+		}, nil
+	}else{
+		return &UserService{
+			repo:      repo,
+		}, nil
+	}
+
 }
 
 // CreateUser 創建用戶

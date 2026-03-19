@@ -9,6 +9,7 @@ import (
 	"self_go_gin/gin_application/api/v1/admin/request"
 	"self_go_gin/gin_application/api/v1/admin/response"
 	"self_go_gin/gin_application/handler"
+	ginlogger "self_go_gin/gin_application/inter/log"
 	ginresp "self_go_gin/util/gin_response"
 
 	"github.com/gin-gonic/gin"
@@ -82,21 +83,21 @@ func AdminLogin(ctx *gin.Context) {
 			return
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		zap.L().Error("\n Api AdminLogin() 失敗(ShouldBindBodyWith fail) : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() ShouldBindBodyWith fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	adminService, err := service.NewAdminService()
 	if err != nil {
-		zap.L().Error("\n Api AdminLogin() NewAdminService fail : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() NewAdminService fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	jwtToken, err := adminService.CheckLogin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		zap.L().Error("\n Api AdminLogin() \n " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() CheckLogin fail", err)
 		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", ginresp.CreateMsgData("jwt_token", *jwtToken), msgid.Success)

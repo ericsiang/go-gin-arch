@@ -3,6 +3,7 @@ package router
 
 import (
 	"os"
+	"path/filepath"
 	v1_admin "self_go_gin/gin_application/api/v1/admin"
 	v1_user "self_go_gin/gin_application/api/v1/user"
 	middleware "self_go_gin/gin_application/middleware"
@@ -11,8 +12,9 @@ import (
 
 	// "strconv"
 
-	"syscall"
 	_ "self_go_gin/cmd/first_web_service/docs" // Swagger 文档生成需要导入
+	"syscall"
+
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -22,23 +24,26 @@ import (
 )
 
 func setDefaultMiddlewares(router *gin.Engine) {
-	zapLogger := zaplog.GetZapLogger("../../log/")
-	/* Add a ginzap middleware, which:
-	 * - Logs all requests, like a combined access and error log.
-	 * - Logs to stdout.
-	 * - RFC3339 with UTC time format.
-	 */
+	// 獲取當前工作目錄並構建 log 路徑
+	cwd, err := os.Getwd()
+	if err != nil {
+		panic("無法獲取工作目錄: " + err.Error())
+	}
+	logPath := filepath.Join(cwd, "log") + string(filepath.Separator)
+	zapLogger := zaplog.GetZapLogger(logPath)
+	// Add a ginzap middleware
 	router.Use(ginzap.Ginzap(zapLogger, "", true))
 
-	/* Logs all panic to error log
-	 *  - stack means whether output the stack info.
-	 */
+	// Logs all panic to error log
 	router.Use(ginzap.RecoveryWithZap(zapLogger, true))
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Content-Type", "Authorization", "Access-Control-Allow-Origin"},
 	})) //跨域請求的中間件
+
+	// Trace 中間件（確保所有請求都有 ID）
+	router.Use(middleware.TraceMiddleware())
 }
 
 // Router 路由
