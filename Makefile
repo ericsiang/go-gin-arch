@@ -2,16 +2,20 @@
 
 help: ## 顯示幫助信息
 	@echo "可用的命令："
-	@echo "  make build        - 構建 Docker 映像"
-	@echo "  make up           - 啟動所有服務"
-	@echo "  make down         - 停止所有服務"
-	@echo "  make logs         - 查看日誌"
-	@echo "  make clean        - 清理所有容器和卷"
-	@echo "  make restart      - 重啟服務"
-	@echo "  make ps           - 查看運行中的容器"
-	@echo "  make migrate      - 容器執行資料庫遷移（初始化表結構）"
-	@echo "  make migrate-seed - 容器執行資料庫遷移並填充種子資料"
-	@echo "  make run-local    - 本地開發運行"
+	@echo "  make build        		- 構建 Docker 映像"
+	@echo "  make up          		- 啟動所有服務"
+	@echo "  make down         		- 停止所有服務"
+	@echo "  make logs         		- 查看日誌"
+	@echo "  make clean        		- 清理所有容器和卷"
+	@echo "  make restart      		- 重啟服務"
+	@echo "  make ps           		- 查看運行中的容器"
+	@echo "  make migrate      		- 容器執行資料庫遷移（初始化表結構）"
+	@echo "  make migrate-seed	 	- 容器執行資料庫遷移並填充種子資料"
+	@echo "  make run-web      		- web 本地運行"
+	@echo "  make run-event-worker 	- event worker 本地運行"
+	@echo "  make run-migrate  		- 資料庫遷移本地運行"
+
+
 
 build: ## 構建 Docker 映像
 	@echo "構建 Docker 映像..."
@@ -60,9 +64,15 @@ migrate-local: ## 本地執行資料庫遷移
 	@echo "✓ 本地資料庫遷移完成！"
 
 # 本地開發運行
-run-local: ## 本地運行應用（不使用 Docker）
+run-web: ## 本地運行應用（不使用 Docker）
 	@echo "本地運行應用..."
 	go run cmd/first_web_service/main.go
+run-event-worker: ## 本地運行事件工作器
+	@echo "本地運行事件工作器..."
+	go run cmd/event_worker/main.go
+run-migrate: ## 本地運行資料庫遷移
+	@echo "本地運行資料庫遷移..."
+	go run cmd/migrate/main.go
 
 # 構建本地二進制文件
 build-local: ## 構建本地二進制文件

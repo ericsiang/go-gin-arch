@@ -7,10 +7,10 @@
 ├── asset                       => 放置素材檔案
 ├── cmd                         => 放置執行檔案
 ├── common                      => 放置常用宣告
-│   ├── common_const            => 設定常數
-│   │   └── common_const.go
-│   └── common_msg_id
-│       └── common_msg_id.go
+│   ├── const                   => 設定常數
+│   │   └── const.go
+│   └── msg_id                  => 統一定義訊息識別碼
+│       └── msg_id.go
 ├── conf                        => 放置環境變數設定檔案
 │   ├── env.docker.yaml.example
 │   └── env.yaml.example
