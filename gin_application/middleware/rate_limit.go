@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"net/http"
-	"self_go_gin/container"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis_rate/v10"
+	"net/http"
+	"self_go_gin/container"
 )
 
 // RateLimit 限流中間件

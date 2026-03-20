@@ -21,8 +21,8 @@ type userDaoImpl struct {
 
 // NewUserDao 創建用戶數據訪問對象
 func NewUserDao() (UserDaoInterface, error) {
-	app :=container.GetContainer()
-	db :=app.GetDB()
+	app := container.GetContainer()
+	db := app.GetDB()
 	return &userDaoImpl{
 		GenericDao: dao.NewGenericDAO[UserPO](db),
 	}, nil

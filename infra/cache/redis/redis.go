@@ -11,10 +11,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-
-
 // InitRedis 初始化 Redis 客戶端
-func InitRedis(serverEnv *env.ServerConfig) (*redis.Client,error) {
+func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, error) {
 	redisConfig := serverEnv.Redis
 	redisAddr := redisConfig.Host + ":" + strconv.Itoa(redisConfig.Port)
 	redisClient := redis.NewClient(&redis.Options{
@@ -33,4 +31,3 @@ func InitRedis(serverEnv *env.ServerConfig) (*redis.Client,error) {
 
 	return redisClient, nil
 }
-

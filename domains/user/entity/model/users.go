@@ -10,8 +10,8 @@ import (
 // User 用戶聚合根
 type User struct {
 	model.GormModel
-	account  valueobj.Account  
-	password valueobj.Password 
+	account  valueobj.Account
+	password valueobj.Password
 }
 
 // NewUser 創建新用戶

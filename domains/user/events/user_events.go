@@ -70,7 +70,6 @@ func (h *UserCreatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 	return nil
 }
 
-
 // UserUpdatedEventHandler 處理用戶更新事件
 type UserUpdatedEventHandler struct{}
 
@@ -99,8 +98,6 @@ func (h *UserUpdatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 	return nil
 }
 
-
-
 // UserDeletedEventHandler 處理用戶刪除事件
 type UserDeletedEventHandler struct{}
 
@@ -128,4 +125,3 @@ func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) er
 	log.Printf("[UserDeletedEvent] Successfully processed user deletion event for UserID: %d", payload.UserID)
 	return nil
 }
-

@@ -42,7 +42,7 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*model.Admins, 
 	logData := map[string]interface{}{
 		"account": account,
 	}
-	
+
 	// 從 DAO 層取得 PO
 	adminPO, err := r.dao.GetAdminByAccount(account)
 	if err != nil {
@@ -63,22 +63,22 @@ func (r *adminRepositoryImpl) CreateAdmin(newAdmin *model.Admins) (*model.Admins
 	logData := map[string]interface{}{
 		"newAdmin": newAdmin,
 	}
-	
+
 	// 領域模型 -> PO 轉換
 	adminPO := r.domainToPO(newAdmin)
-	
+
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(adminPO)
 	if err != nil {
 		return nil, fmt.Errorf("AdminRepositoryImpl CreateAdmin() data: %s \n %w", logData, err)
 	}
-	
+
 	// PO -> 領域模型轉換
 	admin, err := r.poToDomain(createdPO)
 	if err != nil {
 		return nil, fmt.Errorf("AdminRepositoryImpl CreateAdmin() convert PO to domain failed: %w", err)
 	}
-	
+
 	return admin, nil
 }
 
@@ -101,11 +101,11 @@ func (r *adminRepositoryImpl) poToDomain(po *dao.AdminPO) (*model.Admins, error)
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
 		return nil, fmt.Errorf("invalid account in database: %w", err)
 	}
-	
+
 	password := valueobj.NewPasswordFromHash(po.Password)
-	
+
 	// 重建聚合根
 	admin := model.ReconstructAdmins(po.ID, account, password, po.GormModel)
-	
+
 	return admin, nil
 }

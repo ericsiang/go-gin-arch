@@ -42,7 +42,7 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*model.User, err
 	logData := map[string]interface{}{
 		"account": account,
 	}
-	
+
 	// 從 DAO 層取得 PO
 	userPO, err := r.dao.GetUsersByAccount(account)
 	if err != nil {
@@ -63,22 +63,22 @@ func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error
 	logData := map[string]interface{}{
 		"newUser": newUser,
 	}
-	
+
 	// 領域模型 -> PO 轉換
 	userPO := r.domainToPO(newUser)
-	
+
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(userPO)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() data: %s \n %w", logData, err)
 	}
-	
+
 	// PO -> 領域模型轉換
 	user, err := r.poToDomain(createdPO)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() convert PO to domain failed: %w", err)
 	}
-	
+
 	return user, nil
 }
 
@@ -101,11 +101,11 @@ func (r *userRepositoryImpl) poToDomain(po *dao.UserPO) (*model.User, error) {
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
 		return nil, fmt.Errorf("invalid account in database: %w", err)
 	}
-	
+
 	password := valueobj.NewPasswordFromHash(po.Password)
-	
+
 	// 重建聚合根
 	user := model.ReconstructUser(po.ID, account, password, po.GormModel)
-	
+
 	return user, nil
 }

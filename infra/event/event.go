@@ -71,7 +71,6 @@ type Subscriber interface {
 	Shutdown(ctx context.Context) error
 }
 
-
 // NewEvent 創建一個新事件
 func NewEvent(eventType string, payload interface{}) (*Event, error) {
 	payloadBytes, err := json.Marshal(payload)

@@ -146,7 +146,10 @@ func Shutdown(router *gin.RouterGroup) {
 				}
 				evt, _ := event.NewEvent(events.UserCreatedEventType, payload)
 				evt.Source = "slow-test"
-				broker.Publisher().Publish(c, evt);
+				err :=broker.Publisher().Publish(c, evt)
+				if err != nil {
+					zap.L().Error("Failed to publish event", zap.Error(err))
+				}
 			}
 		}
 		zap.L().Info("慢速API完成")

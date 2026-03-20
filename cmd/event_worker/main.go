@@ -91,7 +91,7 @@ func gracefulShutdownWorker(subscriber event.Subscriber, app *container.AppConta
 	} else {
 		fmt.Println("All resources cleaned up")
 	}
-	
+
 	fmt.Println("Flushing logs...")
 	if err := zap.L().Sync(); err != nil {
 		fmt.Printf("Log sync warning: %v (this is usually harmless)\n", err)

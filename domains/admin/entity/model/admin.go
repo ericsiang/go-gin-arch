@@ -10,8 +10,8 @@ import (
 // Admins 管理員聚合根
 type Admins struct {
 	model.GormModel
-	account  valueobj.Account  
-	password valueobj.Password 
+	account  valueobj.Account
+	password valueobj.Password
 }
 
 // NewAdmins 創建新管理員

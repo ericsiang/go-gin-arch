@@ -43,7 +43,7 @@ func NewUserService() (*UserService, error) {
 	}
 
 	return &UserService{
-		repo:      repo,
+		repo: repo,
 	}, nil
 }
 

@@ -12,7 +12,6 @@ import (
 	ginlogger "self_go_gin/gin_application/inter/log"
 	ginresp "self_go_gin/gin_application/inter/response"
 
-
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -54,7 +53,7 @@ func CreateUser(ctx *gin.Context) {
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
 		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() CreateUser fail", err)
-		return	
+		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", nil, msgid.Success)
 }

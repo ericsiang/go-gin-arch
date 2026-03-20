@@ -12,10 +12,8 @@ import (
 
 	validlang "self_go_gin/gin_application/validate_lang"
 
-	"gorm.io/gorm"
 	"github.com/redis/go-redis/v9"
-	
-	
+	"gorm.io/gorm"
 )
 
 // InitMysql 初始化 MySQL 数据库连接
