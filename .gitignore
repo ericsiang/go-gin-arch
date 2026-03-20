@@ -14,6 +14,7 @@ dist
 cmd/first_web_service/docs
 markdown.md
 tree.md
+/app_logs/*/*.*
 
 # 敏感配置文件（不提交到 Git）
 conf/env.yaml

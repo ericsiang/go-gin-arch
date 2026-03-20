@@ -6,7 +6,7 @@
 ├── README.md                   => 說明檔
 ├── asset                       => 放置素材檔案
 ├── cmd                         => 放置執行檔案
-├── common                      => 放置常用宣告
+├── common                      => 放置通用宣告
 │   ├── const                   => 設定常數
 │   │   └── const.go
 │   └── msg_id                  => 統一定義訊息識別碼
@@ -21,7 +21,7 @@
 ├── domains                     => 放置 domain 層的程式碼，依據功能分為不同的子目錄
 │   ├── admin                   => 後台管理員
 │   │   ├── entity              => 資料模型
-│   │   │   └── model               => 資料表結構的 struct
+│   │   │   └── model           => 資料表結構的 struct
 │   │   │       └── admin.go
 │   │   ├── repository          => 資料操作，負責使用 dao 進行資料操作
 │   │   │   ├── dao             => 資料存取層
@@ -119,8 +119,6 @@
     ├── bcryptEncap            => 字串加密核對
     │   ├── bcrypt.go
     │   └── bcryptEncap_test.go
-    ├── gin_response           => 統一 gin response 輸出格式
-    │   └── gin_response.go
     ├── jwt_secret             => jwt 操作
     │   ├── jwt_secret.go
     │   └── jwt_secret_test.go
@@ -178,6 +176,7 @@
   * 環境配置管理(Viper)
   * 日誌系統 (Zap)
   * 快取機制 (Redis)
+  * 資料庫連線 (Mysql)
   * 資料庫遷移和種子資料 (migrate、seeder)
   * 事件驅動架構 (Event-Driven 透過環境設定檔控制是否使用) [架構說明](./asset/markdown/event-driven.md)
 
@@ -193,6 +192,7 @@
     * 限流機制
     * JWT 認證機制
     * 權限驗證機制
+  * 統一的 response 處理
   * API 版本控制
   
 * 標準化與規範的開發實踐
@@ -208,7 +208,7 @@
   * 結構化日誌 (Structured Logging)： 整合 Zap Logger 並區分 Info 與 Error 級別
   
 * 優化功能
-  * Graceful Shutdown： 停止收request，等待所有連線處理結束
+  * Graceful Shutdown： 停止接收 request，timeout 內等待已接收連線處理結束
   
 * 容器化部署
   * 透過 docker 快速建立容器
@@ -358,7 +358,7 @@ graph TB
 
 ### 快速开始
 * conf 資料夾內，依需求複製配置文件範例，檔名不含.example，並填入真實配置
-* 執行，go run main.go 或查看 make file
+* 查看執行 make file
 
 ### 使用到的 package
 <table>

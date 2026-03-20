@@ -17,6 +17,7 @@ linters:
     - gocyclo         # 檢查函式的複雜度
     - misspell        # 檢查拼字錯誤
 
+
 issues:
   max-issues-per-linter: 100 # 每個 linter 最多顯示 100 個問題
   exclude-rules:

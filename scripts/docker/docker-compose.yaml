@@ -49,7 +49,7 @@ services:
       - TZ=Asia/Taipei
     volumes:
       - ../../conf/env.docker.yaml:/app/conf/env.yaml:ro
-      - app_logs:/app/log
+      - ../../app_logs:/app/log
     depends_on:
       mysql:
         condition: service_healthy
