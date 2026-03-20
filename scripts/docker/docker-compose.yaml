@@ -57,6 +57,32 @@ services:
         condition: service_healthy
     networks:
       - gin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/v1/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Event Worker Service
+  app-event:
+    build:
+      context: ../../
+      dockerfile: scripts/docker/Dockerfile
+    container_name: gin-app-event
+    environment:
+      - APP_MODE=debug
+      - TZ=Asia/Taipei
+      - CONFIG_PATH=/app/conf/
+    volumes:
+      - ../../conf/env.docker.yaml:/app/conf/env.yaml:ro
+      - ../../app_logs:/app/log
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gin-network
+    command: ["/app/event_worker"]
     
 
 networks:

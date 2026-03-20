@@ -22,11 +22,14 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/bin/
 # 構建遷移工具
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/bin/migrate ./cmd/migrate/main.go
 
+# 構建事件處理器
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/bin/event_worker ./cmd/event_worker/main.go
+
 # Runtime stage
 FROM alpine:latest
 
-# 安裝 ca-certificates 和 tzdata
-RUN apk --no-cache add ca-certificates tzdata
+# 安裝 ca-certificates、tzdata 和 curl（用於健康檢查）
+RUN apk --no-cache add ca-certificates tzdata curl
 
 # 設置時區為亞洲/台北
 ENV TZ=Asia/Taipei
@@ -39,6 +42,7 @@ WORKDIR /app
 # 從構建階段複製二進制文件
 COPY --from=builder /app/bin/first_web_service /app/first_web_service
 COPY --from=builder /app/bin/migrate /app/migrate
+COPY --from=builder /app/bin/event_worker /app/event_worker
 
 # 複製配置文件
 # COPY conf /app/conf
