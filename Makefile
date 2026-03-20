@@ -1,7 +1,9 @@
 .PHONY: help build up down logs clean restart ps migrate migrate-seed
 
 help: ## 顯示幫助信息
-	@echo "可用的命令："
+	@echo "可用的命令："	
+	@echo "  make fmt        		- go 程式碼格式化"
+	@echo "  make lint        		- go 靜態程式碼分析"
 	@echo "  make build        		- 構建 Docker 映像"
 	@echo "  make up          		- 啟動所有服務"
 	@echo "  make down         		- 停止所有服務"
@@ -16,6 +18,10 @@ help: ## 顯示幫助信息
 	@echo "  make run-migrate  		- 資料庫遷移本地運行"
 
 
+fmt: ## 格式化 Go 程式碼
+	go fmt ./...
+lint: ## 執行 Go 靜態程式碼分析
+	golangci-lint run ./...
 
 build: ## 構建 Docker 映像
 	@echo "構建 Docker 映像..."
