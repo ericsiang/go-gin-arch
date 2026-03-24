@@ -1,4 +1,4 @@
-.PHONY: help build up down logs clean restart ps migrate migrate-seed
+.PHONY: help build up down logs clean restart ps migrate migrate-seed stats inspect
 
 help: ## 顯示幫助信息
 	@echo "可用的命令："	
@@ -11,6 +11,8 @@ help: ## 顯示幫助信息
 	@echo "  make clean        		- 清理所有容器和卷"
 	@echo "  make restart      		- 重啟服務"
 	@echo "  make ps           		- 查看運行中的容器"
+	@echo "  make stats        		- 查看容器記憶體使用情況"
+	@echo "  make inspect APP=gin-app 	- 查看容器資源限制配置（預設: gin-app）"
 	@echo "  make migrate      		- 容器執行資料庫遷移（初始化表結構）"
 	@echo "  make migrate-seed	 	- 容器執行資料庫遷移並填充種子資料"
 	@echo "  make run-web      		- web 本地運行"
@@ -52,6 +54,18 @@ restart: ## 重啟服務
 
 ps: ## 查看運行中的容器
 	cd scripts/docker && docker-compose ps
+
+stats: ## 查看容器記憶體使用情況
+	@echo "檢視容器記憶體使用情況..."
+	cd scripts/docker && docker-compose stats --no-stream
+
+inspect: ## 查看容器資源限制配置 (例: make inspect APP=gin-app)
+	@APP_NAME=$(APP); \
+	if [ -z "$$APP_NAME" ]; then \
+		APP_NAME="gin-app"; \
+	fi; \
+	echo "查看容器 '$$APP_NAME' 的資源限制配置..."; \
+	cd scripts/docker && docker inspect $$APP_NAME | grep -iA 20 "Memory"
 
 # 資料庫遷移
 migrate: ## 執行資料庫遷移（初始化資料表）
