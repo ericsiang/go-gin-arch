@@ -3,9 +3,10 @@ package seeder
 
 import (
 	"self_go_gin/container"
-	admin_model "self_go_gin/domains/admin/entity/model"
 	"self_go_gin/domains/common/valueobj"
-	user_model "self_go_gin/domains/user/entity/model"
+
+	admin_model "self_go_gin/domains/admin/repository/model"
+	user_model "self_go_gin/domains/user/repository/model"
 	"strconv"
 )
 
@@ -29,7 +30,11 @@ func CreateUser() {
 		if err != nil {
 			panic("Seeder CreateUser() create password fail: " + err.Error())
 		}
-		user := user_model.NewUser(account, password)
+
+		user := &user_model.User{
+			Account:  account.String(),
+			Password: password.Hash(),
+		}
 		users = append(users, user)
 	}
 
@@ -47,7 +52,7 @@ func CreateAdmin() {
 	if err := seeder.Clear("admins"); err != nil {
 		panic(err)
 	}
-	var admins []*admin_model.Admins
+	var admins []*admin_model.Admin
 
 	// 使用 DDD 方式創建管理員
 	for i := 1; i < 4; i++ {
@@ -59,7 +64,10 @@ func CreateAdmin() {
 		if err != nil {
 			panic("Seeder CreateAdmin() create password fail: " + err.Error())
 		}
-		admin := admin_model.NewAdmins(account, password)
+		admin := &admin_model.Admin{
+			Account:  account.String(),
+			Password: password.Hash(),
+		}
 		admins = append(admins, admin)
 	}
 

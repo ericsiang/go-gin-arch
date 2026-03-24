@@ -4,8 +4,10 @@ package repository
 import (
 	"fmt"
 	"self_go_gin/domains/common/valueobj"
-	"self_go_gin/domains/user/entity/model"
+
+	"self_go_gin/domains/user/entity"
 	"self_go_gin/domains/user/repository/dao"
+	"self_go_gin/domains/user/repository/model"
 
 	"gorm.io/gorm"
 )
@@ -13,8 +15,8 @@ import (
 // UserRepository 用戶接口
 type UserRepository interface {
 	GetDB() *gorm.DB
-	GetUsersByAccount(account string) (*model.User, error)
-	CreateUser(newUser *model.User) (*model.User, error)
+	GetUsersByAccount(account string) (*entity.User, error)
+	CreateUser(newUser *entity.User) (*entity.User, error)
 }
 
 // userRepositoryImpl 用戶倉庫實現
@@ -38,19 +40,17 @@ func (r *userRepositoryImpl) GetDB() *gorm.DB {
 }
 
 // GetUsersByAccount 根據帳號查詢用戶
-func (r *userRepositoryImpl) GetUsersByAccount(account string) (*model.User, error) {
+func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
 	logData := map[string]interface{}{
 		"account": account,
 	}
 
-	// 從 DAO 層取得 PO
-	userPO, err := r.dao.GetUsersByAccount(account)
+	userModel, err := r.dao.GetUsersByAccount(account)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl GetUsersByAccount() data: %s \n %w", logData, err)
 	}
 
-	// PO -> 領域模型轉換
-	user, err := r.poToDomain(userPO)
+	user, err := r.modelToDomain(userModel)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl GetUsersByAccount() convert PO to domain failed: %w", err)
 	}
@@ -59,22 +59,19 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*model.User, err
 }
 
 // CreateUser 創建用戶
-func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error) {
+func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, error) {
 	logData := map[string]interface{}{
 		"newUser": newUser,
 	}
 
-	// 領域模型 -> PO 轉換
-	userPO := r.domainToPO(newUser)
-
+	userModel := r.domainToModel(newUser)
 	// 儲存到資料庫
-	createdPO, err := r.dao.Create(userPO)
+	createdPO, err := r.dao.Create(userModel)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() data: %s \n %w", logData, err)
 	}
 
-	// PO -> 領域模型轉換
-	user, err := r.poToDomain(createdPO)
+	user, err := r.modelToDomain(createdPO)
 	if err != nil {
 		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() convert PO to domain failed: %w", err)
 	}
@@ -84,28 +81,28 @@ func (r *userRepositoryImpl) CreateUser(newUser *model.User) (*model.User, error
 
 // ============ 轉換方法（私有） ============
 
-// domainToPO 領域模型轉換為持久化物件
-func (r *userRepositoryImpl) domainToPO(user *model.User) *dao.UserPO {
-	return &dao.UserPO{
+// domainToModel 領域模型轉換為持久化物件
+func (r *userRepositoryImpl) domainToModel(user *entity.User) *model.User {
+	return &model.User{
 		GormModel: user.GormModel,
 		Account:   user.GetAccount(),
 		Password:  user.GetPasswordHash(),
 	}
 }
 
-// poToDomain 持久化物件轉換為領域模型
-func (r *userRepositoryImpl) poToDomain(po *dao.UserPO) (*model.User, error) {
+// modelToDomain 持久化物件轉換為領域模型
+func (r *userRepositoryImpl) modelToDomain(model *model.User) (*entity.User, error) {
 	// 重建值物件
-	account, err := valueobj.NewAccount(po.Account)
+	account, err := valueobj.NewAccount(model.Account)
 	if err != nil {
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
 		return nil, fmt.Errorf("invalid account in database: %w", err)
 	}
 
-	password := valueobj.NewPasswordFromHash(po.Password)
+	password := valueobj.NewPasswordFromHash(model.Password)
 
 	// 重建聚合根
-	user := model.ReconstructUser(po.ID, account, password, po.GormModel)
+	user := entity.ReconstructUser(model.ID, account, password, model.GormModel)
 
 	return user, nil
 }

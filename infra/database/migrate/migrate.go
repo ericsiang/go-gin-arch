@@ -3,8 +3,8 @@ package migrate
 
 import (
 	"self_go_gin/container"
-	admin_model "self_go_gin/domains/admin/entity/model"
-	user_model "self_go_gin/domains/user/entity/model"
+	admin_model "self_go_gin/domains/admin/repository/model"
+	user_model "self_go_gin/domains/user/repository/model"
 )
 
 // Migrate 自動遷移數據庫結構
@@ -13,7 +13,7 @@ func Migrate() {
 	db := app.GetDB()
 	err := db.AutoMigrate(&user_model.User{})
 	panicErr(err)
-	err = db.AutoMigrate(&admin_model.Admins{})
+	err = db.AutoMigrate(&admin_model.Admin{})
 	panicErr(err)
 }
 

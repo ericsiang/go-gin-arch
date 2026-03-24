@@ -3,8 +3,10 @@ package repository
 
 import (
 	"fmt"
-	"self_go_gin/domains/admin/entity/model"
+
+	"self_go_gin/domains/admin/entity"
 	"self_go_gin/domains/admin/repository/dao"
+	"self_go_gin/domains/admin/repository/model"
 	"self_go_gin/domains/common/valueobj"
 
 	"gorm.io/gorm"
@@ -13,8 +15,8 @@ import (
 // AdminRepository 管理員帳號密碼表接口
 type AdminRepository interface {
 	GetDB() *gorm.DB
-	GetAdminByAccount(account string) (*model.Admins, error)
-	CreateAdmin(newAdmin *model.Admins) (*model.Admins, error)
+	GetAdminByAccount(account string) (*entity.Admin, error)
+	CreateAdmin(newAdmin *entity.Admin) (*entity.Admin, error)
 }
 
 type adminRepositoryImpl struct {
@@ -38,7 +40,7 @@ func (r *adminRepositoryImpl) GetDB() *gorm.DB {
 }
 
 // GetAdminByAccount 根據帳號查詢管理員
-func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*model.Admins, error) {
+func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*entity.Admin, error) {
 	logData := map[string]interface{}{
 		"account": account,
 	}
@@ -50,7 +52,7 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*model.Admins, 
 	}
 
 	// PO -> 領域模型轉換
-	admin, err := r.poToDomain(adminPO)
+	admin, err := r.modelToDomain(adminPO)
 	if err != nil {
 		return nil, fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() convert PO to domain failed: %w", err)
 	}
@@ -59,13 +61,13 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*model.Admins, 
 }
 
 // CreateAdmin 創建管理員
-func (r *adminRepositoryImpl) CreateAdmin(newAdmin *model.Admins) (*model.Admins, error) {
+func (r *adminRepositoryImpl) CreateAdmin(newAdmin *entity.Admin) (*entity.Admin, error) {
 	logData := map[string]interface{}{
 		"newAdmin": newAdmin,
 	}
 
 	// 領域模型 -> PO 轉換
-	adminPO := r.domainToPO(newAdmin)
+	adminPO := r.domainTomodel(newAdmin)
 
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(adminPO)
@@ -74,7 +76,7 @@ func (r *adminRepositoryImpl) CreateAdmin(newAdmin *model.Admins) (*model.Admins
 	}
 
 	// PO -> 領域模型轉換
-	admin, err := r.poToDomain(createdPO)
+	admin, err := r.modelToDomain(createdPO)
 	if err != nil {
 		return nil, fmt.Errorf("AdminRepositoryImpl CreateAdmin() convert PO to domain failed: %w", err)
 	}
@@ -84,17 +86,17 @@ func (r *adminRepositoryImpl) CreateAdmin(newAdmin *model.Admins) (*model.Admins
 
 // ============ 轉換方法（私有） ============
 
-// domainToPO 領域模型轉換為持久化物件
-func (r *adminRepositoryImpl) domainToPO(admin *model.Admins) *dao.AdminPO {
-	return &dao.AdminPO{
+// domainTomodel 領域模型轉換為持久化物件
+func (r *adminRepositoryImpl) domainTomodel(admin *entity.Admin) *model.Admin {
+	return &model.Admin{
 		GormModel: admin.GormModel,
 		Account:   admin.GetAccount(),
 		Password:  admin.GetPasswordHash(),
 	}
 }
 
-// poToDomain 持久化物件轉換為領域模型
-func (r *adminRepositoryImpl) poToDomain(po *dao.AdminPO) (*model.Admins, error) {
+// modelToDomain 持久化物件轉換為領域模型
+func (r *adminRepositoryImpl) modelToDomain(po *model.Admin) (*entity.Admin, error) {
 	// 重建值物件
 	account, err := valueobj.NewAccount(po.Account)
 	if err != nil {
@@ -105,7 +107,7 @@ func (r *adminRepositoryImpl) poToDomain(po *dao.AdminPO) (*model.Admins, error)
 	password := valueobj.NewPasswordFromHash(po.Password)
 
 	// 重建聚合根
-	admin := model.ReconstructAdmins(po.ID, account, password, po.GormModel)
+	admin := entity.ReconstructAdmin(po.ID, account, password, po.GormModel)
 
 	return admin, nil
 }

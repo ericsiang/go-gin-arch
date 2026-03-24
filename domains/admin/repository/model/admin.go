@@ -1,0 +1,18 @@
+// Package model 定義持久化物件（Persistence Object）
+package model
+
+import (
+	"self_go_gin/internal/model"
+)
+
+// Admin 管理員持久化物件，僅用於資料庫 ORM 映射，不包含業務邏輯
+type Admin struct {
+	model.GormModel
+	Account  string `gorm:"type:varchar(255);not null;uniqueIndex;column:account" json:"account"`
+	Password string `gorm:"type:varchar(255);not null;column:password" json:"password"`
+}
+
+// TableName 指定表名
+func (Admin) TableName() string {
+	return "admins"
+}

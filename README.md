@@ -19,25 +19,28 @@
 │   ├── infra_provider.go       => 基礎設施提供者（DB、Redis、EventBroker 等）
 │   └── README.md               => 容器層使用文檔
 ├── domains                     => 放置 domain 層的程式碼，依據功能分為不同的子目錄
-│   ├── admin                   => 後台管理員
-│   │   ├── entity              => 資料模型
-│   │   │   └── model           => 資料表結構的 struct
+│   ├── admin                   => 後台管理員領域
+│   │   ├── entity              => 存放所有的實體 (包含聚合根與內部實體)
 │   │   │       └── admin.go
 │   │   ├── repository          => 資料操作，負責使用 dao 進行資料操作
 │   │   │   ├── dao             => 資料存取層
 │   │   │   │   └── admin_dao.go
+│   │   │   ├── model          => 資料表結構的 struct
+│   │   │   │   └── admin.go
 │   │   │   └── admin_repo.go
 │   │   └── service             => 業務邏輯處理
 │   │       └── admin_serv.go
-│   └── user                    => 用戶
-│       ├── entity              => 資料模型
-│       │   └── model           => 資料表結構的 struct
-│       │       └── users.go
+│   └── user                    => 用戶領域
+│       ├── entity              => 存放所有的實體 (包含聚合根與內部實體)
+│       │       └── users.go    => 聚合根
+│       ├── valueobj            => 值物件
 │       ├── events              => 用戶事件處理
 │       │   └── user_serv.go
 │       ├── repository          => 資料操作，負責使用 dao 進行資料操作
 │       │   ├── dao             => 資料存取層
 │       │   │   └── user_dao.go
+│       │   ├── model          => 資料表結構的 struct
+│       │   │   └── user.go
 │       │   └── user_repo.go
 │       └── service             => 業務邏輯處理
 │           └── user_serv.go
@@ -155,16 +158,17 @@
       * 可擴展：輕鬆添加新的基礎設施組件
 
   * 採用 DDD (Domain-Driven Design) 思維，清晰的職責分離與職權域邊界
-  * 完整的分層架構設計 (Entity → ValueObject → Service → Repository → DAO → Service)
-    * Entity 層（聚合根）**
-      * 建立實體聚合根，包含身份與狀態
-      * ValueObject 驗證：內置值物件進行數據驗證和加密（如 Account、Password）
+  * 完整的分層架構設計 (Entity → ValueObject -> Service → Repository → DAO → Service)
+    * Entity 層（實體）
+      * 存放所有的實體 (包含聚合根與內部實體)
+    * ValueObject
+      * 建立值物件
     * Service 層
       * 應用層邏輯協調（事務邊界、流程編排、複雜業務流程）
       * 調用 Repository 進行數據操作
     * Repository 層
-      * 領域模型（Domain Model）與持久化模型（PO）之間的轉換
-      * cache 的調用也在這層
+      * 領域模型（Domain）與持久化模型（Model）之間的轉換
+      * cache 的調用
       * 隱藏所有數據庫實現細節，對上層提供純粹的領域模型
       * DAO 層
         * 純粹的數據庫操作，直接使用 GORM 和 PO（持久化物件）

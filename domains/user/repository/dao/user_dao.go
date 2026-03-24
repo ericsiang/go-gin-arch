@@ -4,19 +4,20 @@ package dao
 import (
 	"fmt"
 	"self_go_gin/container"
+	"self_go_gin/domains/user/repository/model"
 	"self_go_gin/internal/dao"
 )
 
 // UserDaoInterface 用戶數據訪問接口
 // DAO 層職責：純粹的資料庫操作，使用 PO（持久化物件）
 type UserDaoInterface interface {
-	GetGenericDao() dao.GenericDaoInterface[UserPO]
-	GetUsersByAccount(account string) (*UserPO, error)
-	Create(userPO *UserPO) (*UserPO, error)
+	GetGenericDao() dao.GenericDaoInterface[model.User]
+	GetUsersByAccount(account string) (*model.User, error)
+	Create(userPO *model.User) (*model.User, error)
 }
 
 type userDaoImpl struct {
-	GenericDao dao.GenericDaoInterface[UserPO]
+	GenericDao dao.GenericDaoInterface[model.User]
 }
 
 // NewUserDao 創建用戶數據訪問對象
@@ -24,20 +25,20 @@ func NewUserDao() (UserDaoInterface, error) {
 	app := container.GetContainer()
 	db := app.GetDB()
 	return &userDaoImpl{
-		GenericDao: dao.NewGenericDAO[UserPO](db),
+		GenericDao: dao.NewGenericDAO[model.User](db),
 	}, nil
 }
 
-func (d *userDaoImpl) GetGenericDao() dao.GenericDaoInterface[UserPO] {
+func (d *userDaoImpl) GetGenericDao() dao.GenericDaoInterface[model.User] {
 	return d.GenericDao
 }
 
 // GetUsersByAccount 根據帳號查詢用戶
-func (d *userDaoImpl) GetUsersByAccount(account string) (*UserPO, error) {
+func (d *userDaoImpl) GetUsersByAccount(account string) (*model.User, error) {
 	logData := map[string]interface{}{
 		"account": account,
 	}
-	var userPO UserPO
+	var userPO model.User
 	err := d.GenericDao.GetDB().Where("account = ?", account).First(&userPO).Error
 	if err != nil {
 		return nil, fmt.Errorf("UserDaoImpl GetUsersByAccount() data: %s \n %w", logData, err)
@@ -46,7 +47,7 @@ func (d *userDaoImpl) GetUsersByAccount(account string) (*UserPO, error) {
 }
 
 // Create 創建用戶
-func (d *userDaoImpl) Create(userPO *UserPO) (*UserPO, error) {
+func (d *userDaoImpl) Create(userPO *model.User) (*model.User, error) {
 	logData := map[string]interface{}{
 		"userPO": userPO,
 	}

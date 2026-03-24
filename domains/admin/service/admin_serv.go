@@ -4,7 +4,7 @@ package service
 import (
 	"errors"
 	"fmt"
-	"self_go_gin/domains/admin/entity/model"
+	"self_go_gin/domains/admin/entity"
 	"self_go_gin/domains/admin/repository"
 	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/gin_application/api/v1/admin/request"
@@ -31,7 +31,7 @@ func NewAdminService() (*AdminService, error) {
 }
 
 // CreateAdmin 創建管理員
-func (s *AdminService) CreateAdmin(req request.CreateAdminRequest) (*model.Admins, error) {
+func (s *AdminService) CreateAdmin(req request.CreateAdminRequest) (*entity.Admin, error) {
 	// 創建帳號值物件（自動驗證格式）
 	account, err := valueobj.NewAccount(req.Account)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *AdminService) CreateAdmin(req request.CreateAdminRequest) (*model.Admin
 	}
 
 	// 創建聚合根
-	admin := model.NewAdmins(account, password)
+	admin := entity.NewAdmin(account, password)
 
 	// 儲存到資料庫
 	createdAdmin, err := s.repo.CreateAdmin(admin)

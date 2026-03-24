@@ -10,7 +10,8 @@ import (
 
 	"self_go_gin/container"
 	"self_go_gin/domains/common/valueobj"
-	"self_go_gin/domains/user/entity/model"
+	"self_go_gin/domains/user/entity"
+
 	"self_go_gin/domains/user/events"
 	"self_go_gin/domains/user/repository"
 	"self_go_gin/gin_application/api/v1/user/request"
@@ -48,7 +49,7 @@ func NewUserService() (*UserService, error) {
 }
 
 // CreateUser 創建用戶
-func (s *UserService) CreateUser(req request.CreateUserRequest) (*model.User, error) {
+func (s *UserService) CreateUser(req request.CreateUserRequest) (*entity.User, error) {
 	// 創建帳號值物件（自動驗證格式）
 	account, err := valueobj.NewAccount(req.Account)
 	if err != nil {
@@ -72,7 +73,7 @@ func (s *UserService) CreateUser(req request.CreateUserRequest) (*model.User, er
 	}
 
 	// 創建聚合根
-	user := model.NewUser(account, password)
+	user := entity.NewUser(account, password)
 
 	// 儲存到資料庫
 	createdUser, err := s.repo.CreateUser(user)
@@ -123,7 +124,7 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 }
 
 // publishUserCreatedEvent 發布用戶創建事件
-func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *model.User) error {
+func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.User) error {
 	payload := events.UserCreatedEventPayload{
 		UserID:   user.ID,
 		Account:  user.GetAccount(),
