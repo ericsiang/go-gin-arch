@@ -5,12 +5,18 @@ import (
 	"self_go_gin/container"
 	admin_model "self_go_gin/domains/admin/repository/model"
 	user_model "self_go_gin/domains/user/repository/model"
+
+	"gorm.io/gorm"
 )
 
 // Migrate 自動遷移數據庫結構
 func Migrate() {
 	app := container.GetContainer()
-	db := app.GetDB()
+	appDB := app.GetMySQLDB()
+	db, ok := appDB.GetDB().(*gorm.DB)
+	if !ok {
+		panic("failed to get gorm.DB instance")
+	}
 	err := db.AutoMigrate(&user_model.User{})
 	panicErr(err)
 	err = db.AutoMigrate(&admin_model.Admin{})

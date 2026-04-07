@@ -1,4 +1,4 @@
-// Package model 定義用戶相關的數據模型
+// Package entity 定義用戶相關的數據模型
 package entity
 
 import (

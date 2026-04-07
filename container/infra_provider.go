@@ -4,7 +4,8 @@ package container
 import (
 	"fmt"
 
-	"self_go_gin/infra/cache/redis"
+	goredis "self_go_gin/infra/cache/redis"
+	"self_go_gin/infra/database"
 	"self_go_gin/infra/env"
 	"self_go_gin/infra/event"
 	gormysql "self_go_gin/infra/orm/gorm_mysql"
@@ -13,18 +14,17 @@ import (
 	validlang "self_go_gin/gin_application/validate_lang"
 
 	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
-// InitMysql 初始化 MySQL 数据库连接
-func InitMysql(config *env.ServerConfig) (*gorm.DB, error) {
-	db, err := gormysql.InitMysql(config)
-
+// InitMysql 初始化 MySQL 資料庫接口
+func InitMysql(config *env.ServerConfig) (database.Database, error) {
+	mysql := gormysql.InitMysqlDB()
+	err := mysql.Connect(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get mysql db: %w", err)
 	}
 	fmt.Println("MySQL database initialized")
-	return db, nil
+	return mysql, nil
 }
 
 // InitRedis 初始化 Redis 连接

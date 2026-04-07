@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"sync"
 
+	"self_go_gin/infra/database"
 	"self_go_gin/infra/env"
 	"self_go_gin/infra/event"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 // AppContainer 应用容器，负责管理所有依赖实例
@@ -20,7 +20,7 @@ type AppContainer struct {
 	// 環境配置
 	config *env.ServerConfig
 	// 基础设施
-	db          *gorm.DB
+	mysqlDB     database.Database
 	redisClient *redis.Client
 	eventBroker *event.Broker
 	// 其他通用实例可以在此添加
@@ -71,14 +71,14 @@ func (c *AppContainer) Initialize(configPath string) error {
 func (c *AppContainer) initInfrastructure() error {
 	// 初始化数据库
 	if c.config.MysqlDB.IsEnabled {
-		db, err := InitMysql(c.config)
+		mysqlDB, err := InitMysql(c.config)
 		if err != nil {
 			return fmt.Errorf("failed to init mysql: %w", err)
 		}
-		if db == nil {
+		if mysqlDB == nil {
 			return fmt.Errorf("mysql db instance is nil")
 		}
-		c.db = db
+		c.mysqlDB = mysqlDB
 	} else {
 		fmt.Println("MySQL is not enabled by env")
 	}
@@ -141,20 +141,15 @@ func (c *AppContainer) Shutdown(ctx context.Context) error {
 		}
 	}
 
-	// 关闭数据库连接
-	if c.db != nil {
-		sqlDB, err := c.db.DB()
-		if err == nil {
-			if err := sqlDB.Close(); err != nil {
-				errs = append(errs, fmt.Errorf("failed to close database: %w", err))
-			} else {
-				fmt.Println("Database connection closed")
-			}
+	// 關閉資料庫連接
+	if c.mysqlDB != nil {
+		err := c.mysqlDB.Close()
+		if err != nil {
+			return fmt.Errorf("	close db fail %w", err)
 		}
 	}
 
 	// 可以在此添加其他资源清理逻辑
-
 	if len(errs) > 0 {
 		return fmt.Errorf("shutdown errors: %v", errs)
 	}
@@ -163,11 +158,11 @@ func (c *AppContainer) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// GetDB 获取数据库实例
-func (c *AppContainer) GetDB() *gorm.DB {
+// GetMySQLDB 获取 MySQL 数据库实例
+func (c *AppContainer) GetMySQLDB() database.Database {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.db
+	return c.mysqlDB
 }
 
 // GetRedisClient 获取 Redis 客户端实例

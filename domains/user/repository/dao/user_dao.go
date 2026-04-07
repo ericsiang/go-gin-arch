@@ -6,6 +6,8 @@ import (
 	"self_go_gin/container"
 	"self_go_gin/domains/user/repository/model"
 	"self_go_gin/internal/dao"
+
+	"gorm.io/gorm"
 )
 
 // UserDaoInterface 用戶數據訪問接口
@@ -23,7 +25,11 @@ type userDaoImpl struct {
 // NewUserDao 創建用戶數據訪問對象
 func NewUserDao() (UserDaoInterface, error) {
 	app := container.GetContainer()
-	db := app.GetDB()
+	appDB := app.GetMySQLDB()
+	db, ok := appDB.GetDB().(*gorm.DB)
+	if !ok {
+		return nil, fmt.Errorf("failed to get gorm.DB instance")
+	}
 	return &userDaoImpl{
 		GenericDao: dao.NewGenericDAO[model.User](db),
 	}, nil

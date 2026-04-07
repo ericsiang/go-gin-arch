@@ -3,6 +3,7 @@ package gormysql
 
 import (
 	"fmt"
+	"self_go_gin/infra/database"
 	"self_go_gin/infra/env"
 
 	"github.com/gin-gonic/gin"
@@ -13,8 +14,18 @@ import (
 	"moul.io/zapgorm2"
 )
 
-// InitMysql 初始化 MySQL 資料庫連接
-func InitMysql(serverEnv *env.ServerConfig) (*gorm.DB, error) {
+// MysqlDB 是 Database 接口的實現，封裝了 GORM 的 MySQL 連接
+type MysqlDB struct {
+	db *gorm.DB
+}
+
+// InitMysqlDB 初始化 MysqlDB
+func InitMysqlDB() database.Database {
+	return &MysqlDB{}
+}
+
+// Connect 建立 MySQL 連接
+func (m *MysqlDB) Connect(serverEnv *env.ServerConfig) error {
 	var config *gorm.Config
 	gormZaplogger := zapgorm2.New(zap.L())
 	logger.Default.LogMode(logger.Error)
@@ -43,7 +54,7 @@ func InitMysql(serverEnv *env.ServerConfig) (*gorm.DB, error) {
 	var err error
 	db, err := gorm.Open(mysql.Open(dsn), config)
 	if err != nil {
-		return nil, fmt.Errorf("mysql connect failed, err: %w", err)
+		return fmt.Errorf("mysql connect failed, err: %w", err)
 	}
 
 	sqlDB, _ := db.DB()
@@ -51,5 +62,22 @@ func InitMysql(serverEnv *env.ServerConfig) (*gorm.DB, error) {
 	sqlDB.SetMaxOpenConns(100)
 
 	fmt.Println("mysql connect success")
-	return db, nil
+	return nil
+}
+
+// Close 關閉 MySQL 連接
+func (m *MysqlDB) Close() error {
+	// 1. 獲取底層的通用數據庫對象 sql.DB
+	sqlDB, err := m.db.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get mysql db: %w", err)
+	}
+
+	// 2. 呼叫 Close()
+	return sqlDB.Close()
+}
+
+// GetDB 返回底層的 *gorm.DB 對象
+func (m *MysqlDB) GetDB() interface{} {
+	return m.db
 }

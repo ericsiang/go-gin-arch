@@ -6,6 +6,8 @@ import (
 	"self_go_gin/container"
 	"self_go_gin/domains/admin/repository/model"
 	"self_go_gin/internal/dao"
+
+	"gorm.io/gorm"
 )
 
 // AdminDao 管理員帳號密碼表 DAO 介面
@@ -22,7 +24,11 @@ type adminDaoImpl struct {
 // NewAdminDao 建立管理員帳號密碼表 DAO
 func NewAdminDao() (AdminDao, error) {
 	app := container.GetContainer()
-	db := app.GetDB()
+	appDB := app.GetMySQLDB()
+	db, ok := appDB.GetDB().(*gorm.DB) // 獲取底層 DB 實例
+	if !ok {
+		return nil, fmt.Errorf("failed to get gorm.DB instance")
+	}
 	return &adminDaoImpl{
 		GenericDao: dao.NewGenericDAO[model.Admin](db),
 	}, nil

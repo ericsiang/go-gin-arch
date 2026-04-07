@@ -8,12 +8,18 @@ import (
 	admin_model "self_go_gin/domains/admin/repository/model"
 	user_model "self_go_gin/domains/user/repository/model"
 	"strconv"
+
+	"gorm.io/gorm"
 )
 
 // CreateUser 創建用戶資料
 func CreateUser() {
 	app := container.GetContainer()
-	db := app.GetDB()
+	appDB := app.GetMySQLDB()
+	db, ok := appDB.GetDB().(*gorm.DB)
+	if !ok {
+		panic("failed to get gorm.DB instance")
+	}
 	seeder := NewSeeder(db)
 	if err := seeder.Clear("users"); err != nil {
 		panic(err)
@@ -47,7 +53,11 @@ func CreateUser() {
 // CreateAdmin 創建管理員資料
 func CreateAdmin() {
 	app := container.GetContainer()
-	db := app.GetDB()
+	appDB := app.GetMySQLDB()
+	db, ok := appDB.GetDB().(*gorm.DB)
+	if !ok {
+		panic("failed to get gorm.DB instance")
+	}
 	seeder := NewSeeder(db)
 	if err := seeder.Clear("admins"); err != nil {
 		panic(err)
