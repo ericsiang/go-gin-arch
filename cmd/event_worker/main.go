@@ -47,7 +47,7 @@ func main() {
 	// 6. 在 goroutine 中启动服务器
 	go func() {
 		if err := subscriber.Run(); err != nil {
-			log.Printf("Event server stopped with error: %v", err)
+			zap.S().Error("Event server stopped with error ", zap.Error(err))
 		}
 	}()
 

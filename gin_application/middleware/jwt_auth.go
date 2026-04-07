@@ -4,7 +4,7 @@ package middleware
 import (
 	"errors"
 	"net/http"
-	"self_go_gin/util/jwt_secret"
+	jwtsecret "self_go_gin/util/jwt_secret"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -32,29 +32,33 @@ func JwtAuthMiddleware() gin.HandlerFunc {
 				return
 			}
 			jwtToken := strings.Split(bearerToken, " ")
-			token := jwtToken[1]
-
-			claims, err := jwtsecret.ParseToken(token)
-			if claims != nil {
-				if claims.UserID == 0 && claims.AdminID == 0 {
-					message = "jwt data fail"
-					isPass = false
+			if len(jwtToken) != 2 || jwtToken[0] != "Bearer" {
+				message = "invalid bearer format"
+				isPass = false
+			} else {
+				token := jwtToken[1]
+				claims, err := jwtsecret.ParseToken(token)
+				if claims != nil {
+					if claims.UserID == 0 && claims.AdminID == 0 {
+						message = "jwt data fail"
+						isPass = false
+					}
+					if claims.UserID != 0 {
+						c.Set("usersID", claims.UserID)
+					} else if claims.AdminID != 0 {
+						c.Set("adminID", claims.AdminID)
+					}
 				}
-				if claims.UserID != 0 {
-					c.Set("usersID", claims.UserID)
-				} else if claims.AdminID != 0 {
-					c.Set("adminID", claims.AdminID)
-				}
-			}
 
-			if err != nil {
-				switch {
-				case errors.Is(err, jwt.ErrTokenExpired):
-					message = "token expired"
-					isPass = false
-				default:
-					message = "token fail"
-					isPass = false
+				if err != nil {
+					switch {
+					case errors.Is(err, jwt.ErrTokenExpired):
+						message = "token expired"
+						isPass = false
+					default:
+						message = "token fail"
+						isPass = false
+					}
 				}
 			}
 		}

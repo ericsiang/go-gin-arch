@@ -4,9 +4,10 @@ package events
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"self_go_gin/infra/event"
+
+	"go.uber.org/zap"
 )
 
 // 定義事件類型常量
@@ -63,10 +64,9 @@ func (h *UserCreatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 
 	// 這裡實現具體的業務邏輯
 	// 例如：發送歡迎郵件、記錄審計日誌、更新統計數據等
-	log.Printf("[UserCreatedEvent] Processing user creation - UserID: %d, Account: %s",
-		payload.UserID, payload.Account)
+	zap.S().Infof("Processing user creation event for UserID: %d, Account: %s", payload.UserID, payload.Account)
 
-	log.Printf("[UserCreatedEvent] Successfully processed user creation event for UserID: %d", payload.UserID)
+	zap.S().Infof("User created event processed successfully for UserID: %d", payload.UserID)
 	return nil
 }
 
@@ -90,11 +90,9 @@ func (h *UserUpdatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 		return fmt.Errorf("failed to unmarshal payload: %w", err)
 	}
 
-	log.Printf("[UserUpdatedEvent] Processing user update - UserID: %d, Account: %s",
-		payload.UserID, payload.Account)
+	zap.S().Infof("Processing user update event for UserID: %d, Account: %s", payload.UserID, payload.Account)
 	// 實現具體的業務邏輯
-
-	log.Printf("[UserUpdatedEvent] Successfully processed user update event for UserID: %d", payload.UserID)
+	zap.S().Infof("User updated event processed successfully for UserID: %d", payload.UserID)
 	return nil
 }
 
@@ -118,10 +116,9 @@ func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) er
 		return fmt.Errorf("failed to unmarshal payload: %w", err)
 	}
 
-	log.Printf("[UserDeletedEvent] Processing user deletion - UserID: %d, Account: %s",
-		payload.UserID, payload.Account)
-	// 實現具體的業務邏輯
+	zap.S().Infof("Processing user deletion event for UserID: %d, Account: %s", payload.UserID, payload.Account)
 
-	log.Printf("[UserDeletedEvent] Successfully processed user deletion event for UserID: %d", payload.UserID)
+	// 實現具體的業務邏輯
+	zap.S().Infof("User deleted event processed successfully for UserID: %d", payload.UserID)
 	return nil
 }

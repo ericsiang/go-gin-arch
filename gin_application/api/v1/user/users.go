@@ -49,7 +49,7 @@ func CreateUser(ctx *gin.Context) {
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
-	_, err = userService.CreateUser(data)
+	_, err = userService.CreateUser(ctx, data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
 		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() CreateUser fail", err)

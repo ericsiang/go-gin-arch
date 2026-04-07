@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"self_go_gin/container"
@@ -19,6 +18,7 @@ import (
 	"self_go_gin/infra/event"
 	jwtsecret "self_go_gin/util/jwt_secret"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -49,7 +49,7 @@ func NewUserService() (*UserService, error) {
 }
 
 // CreateUser 創建用戶
-func (s *UserService) CreateUser(req request.CreateUserRequest) (*entity.User, error) {
+func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequest) (*entity.User, error) {
 	// 創建帳號值物件（自動驗證格式）
 	account, err := valueobj.NewAccount(req.Account)
 	if err != nil {
@@ -83,9 +83,9 @@ func (s *UserService) CreateUser(req request.CreateUserRequest) (*entity.User, e
 
 	// 發布用戶創建事件
 	if s.publisher != nil {
-		if err := s.publishUserCreatedEvent(context.Background(), createdUser); err != nil {
+		if err := s.publishUserCreatedEvent(ctx, createdUser); err != nil {
 			// 記錄錯誤但不阻止用戶創建流程
-			log.Printf("[UserService] Failed to publish user created event: %v", err)
+			zap.S().Error("Failed to publish user created event ", zap.Error(err))
 		}
 	}
 
@@ -142,6 +142,6 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 		return fmt.Errorf("failed to publish event: %w", err)
 	}
 
-	log.Printf("[UserService] User created event published: UserID=%d, Account=%s", user.ID, user.GetAccount())
+	zap.S().Infof("User created event published successfully for UserID: %d, Account: %s", user.ID, user.GetAccount())
 	return nil
 }

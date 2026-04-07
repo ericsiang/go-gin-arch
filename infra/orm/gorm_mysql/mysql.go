@@ -3,6 +3,7 @@ package gormysql
 
 import (
 	"fmt"
+	constset "self_go_gin/common/const"
 	"self_go_gin/infra/database"
 	"self_go_gin/infra/env"
 
@@ -58,8 +59,8 @@ func (m *MysqlDB) Connect(serverEnv *env.ServerConfig) error {
 	}
 
 	sqlDB, _ := db.DB()
-	sqlDB.SetMaxIdleConns(10)
-	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxIdleConns(constset.MySQLMaxIdleConns)
+	sqlDB.SetMaxOpenConns(constset.MySQLMaxOpenConns)
 
 	fmt.Println("mysql connect success")
 	return nil

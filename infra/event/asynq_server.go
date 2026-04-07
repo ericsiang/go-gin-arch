@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 
 	"self_go_gin/infra/env"
 
 	"github.com/hibiken/asynq"
+	"go.uber.org/zap"
 )
 
 // AsynqServer Asynq 服務器，實現 EventSubscriber 接口
@@ -44,7 +44,7 @@ func InitAsynqServer(serverConfig *env.ServerConfig) *AsynqServer {
 			Concurrency: 10,
 			// 錯誤處理器
 			ErrorHandler: asynq.ErrorHandlerFunc(func(_ context.Context, task *asynq.Task, err error) {
-				log.Printf("Error processing task %s: %v", task.Type(), err)
+				zap.S().Error("Error processing task ", zap.String("type", task.Type()), zap.Error(err))
 			}),
 		},
 	)
