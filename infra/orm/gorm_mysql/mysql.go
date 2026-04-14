@@ -61,7 +61,7 @@ func (m *MysqlDB) Connect(serverEnv *env.ServerConfig) error {
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxIdleConns(constset.MySQLMaxIdleConns)
 	sqlDB.SetMaxOpenConns(constset.MySQLMaxOpenConns)
-
+	m.db = db
 	fmt.Println("mysql connect success")
 	return nil
 }

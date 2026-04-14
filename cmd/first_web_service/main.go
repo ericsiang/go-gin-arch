@@ -64,9 +64,9 @@ func httpServerRun(app *container.AppContainer) {
 	srv := &http.Server{
 		Addr:         addr,
 		Handler:      router,
-		ReadTimeout:  15 * time.Second, // 防止慢速客户端攻击
-		WriteTimeout: 15 * time.Second, // 防止慢速响应
-		IdleTimeout:  60 * time.Second, // Keep-Alive 超时
+		ReadTimeout:  5 * time.Second, // 防止慢速客户端攻击
+		WriteTimeout: 10 * time.Second, // 防止慢速响应
+		IdleTimeout:  120 * time.Second, // Keep-Alive 超时
 	}
 
 	// 在 goroutine 中启动服务器

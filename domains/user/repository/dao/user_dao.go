@@ -27,7 +27,7 @@ func NewUserDao() (UserDaoInterface, error) {
 	app := container.GetContainer()
 	appDB := app.GetMySQLDB()
 	db, ok := appDB.GetDB().(*gorm.DB)
-	if !ok {
+	if !ok || db ==nil{
 		return nil, fmt.Errorf("failed to get gorm.DB instance")
 	}
 	return &userDaoImpl{
