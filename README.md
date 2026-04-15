@@ -433,6 +433,6 @@ graph TB
     <tr>
         <td><a href="https://github.com/hibiken/asynq" target="_blank">asynq</a></td>
         <td>基於 Redis 的分布式任務隊列和異步處理庫，用於實現事件驅動架構</td>
-        <td> - </td>
+        <td><a href="https://www.tizi365.com/topic/14001.html" target="_blank">open</a>  </td>
     </tr>
 </table>
