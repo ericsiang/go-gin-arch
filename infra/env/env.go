@@ -2,9 +2,7 @@ package env
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -72,28 +70,28 @@ func InitEnv(envPath string) error {
 	fmt.Println("配置載入成功")
 
 	// 監聽配置文件變更
-	v.WatchConfig()
-	v.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Println("檢測到配置文件變更:", e.Name)
+	// v.WatchConfig()
+	// v.OnConfigChange(func(e fsnotify.Event) {
+	// 	fmt.Println("檢測到配置文件變更:", e.Name)
 
-		// 創建新配置實例
-		newConfig := configManager.GetServerEnv()
-		if err := v.Unmarshal(newConfig); err != nil {
-			fmt.Fprintf(os.Stderr, "配置熱重載失敗(解析錯誤): %v\n", err)
-			return
-		}
+	// 	// 創建新配置實例
+	// 	newConfig := configManager.GetServerEnv()
+	// 	if err := v.Unmarshal(newConfig); err != nil {
+	// 		fmt.Fprintf(os.Stderr, "配置熱重載失敗(解析錯誤): %v\n", err)
+	// 		return
+	// 	}
 
-		// 驗證新配置
-		if err := newConfig.Validate(); err != nil {
-			fmt.Fprintf(os.Stderr, "配置熱重載失敗(驗證錯誤): %v\n", err)
-			return
-		}
+	// 	// 驗證新配置
+	// 	if err := newConfig.Validate(); err != nil {
+	// 		fmt.Fprintf(os.Stderr, "配置熱重載失敗(驗證錯誤): %v\n", err)
+	// 		return
+	// 	}
 
-		// 函數更新配置
-		configManager.UpdateConfig(newConfig)
+	// 	// 函數更新配置
+	// 	configManager.UpdateConfig(newConfig)
 
-		fmt.Println("配置熱重載成功")
-	})
+	// 	fmt.Println("配置熱重載成功")
+	// })
 
 	return nil
 }

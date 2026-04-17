@@ -40,7 +40,17 @@ func InitRedis(config *env.ServerConfig) (*redis.Client, error) {
 
 // InitEventBroker 初始化事件代理
 func InitEventBroker(config *env.ServerConfig) (*event.Broker, error) {
-	broker, err := event.NewBroker(event.BrokerTypeAsynq, config)
+	var brokerType event.BrokerType
+	switch config.EventBrokerType {
+	case "asynq":
+		brokerType = event.BrokerTypeAsynq
+	case "rabbitmq":
+		brokerType = event.BrokerTypeRabbitMQ
+	default:
+		return nil, fmt.Errorf("unsupported event broker type: %s", config.EventBrokerType)
+	}
+
+	broker, err := event.NewBroker(brokerType, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create event broker: %w", err)
 	}

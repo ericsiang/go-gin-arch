@@ -48,6 +48,34 @@ services:
         reservations:
           memory: 256M
 
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: gin-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: /
+      TZ: Asia/Taipei
+    ports:
+      - "5672:5672"        # AMQP port
+      - "15672:15672"      # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - gin-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
   # Go Gin Application
   app:
     build:
@@ -66,6 +94,8 @@ services:
       mysql:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - gin-network
@@ -98,6 +128,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - gin-network
     command: ["/app/event_worker"]
@@ -115,4 +147,5 @@ networks:
 
 volumes:
   mysql_data:
+  rabbitmq_data:
   app_logs:

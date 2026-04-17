@@ -96,7 +96,9 @@
 │   │   ├── event.go            => 事件核心定義和接口
 │   │   ├── broker.go           => 事件代理器（EventBroker）
 │   │   ├── asynq_client.go     => Asynq 客戶端實現（Publisher）
-│   │   └── asynq_server.go     => Asynq 服務端實現（Subscriber）
+│   │   ├── asynq_server.go     => Asynq 服務端實現（Subscriber）
+│   │   ├── rabbitmq_client.go  => RabbitMQ 客戶端實現（Publisher）
+│   │   └── rabbitmq_server.go  => RabbitMQ 服務端實現（Subscriber）
 │   ├── log                     => 日誌
 │   │   └── zap_log
 │   │       └── logger.go

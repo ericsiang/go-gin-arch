@@ -40,8 +40,15 @@ func NewBroker(brokerType BrokerType, config *env.ServerConfig) (*Broker, error)
 		subscriber = InitAsynqServer(config)
 
 	case BrokerTypeRabbitMQ:
-		// TODO: 實現 RabbitMQ
-		return nil, fmt.Errorf("rabbitMQ broker not implemented yet")
+		var err error
+		publisher, err = InitRabbitMQClient(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize RabbitMQ client: %w", err)
+		}
+		subscriber, err = InitRabbitMQServer(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize RabbitMQ server: %w", err)
+		}
 
 	case BrokerTypeKafka:
 		// TODO: 實現 Kafka

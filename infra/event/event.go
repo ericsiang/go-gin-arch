@@ -45,6 +45,8 @@ type PublishOptions struct {
 	Delay time.Duration
 	// Timeout 處理超時時間
 	Timeout time.Duration
+	// RoutingKey 路由鍵 (可選，用於 RabbitMQ 等消息系統) 
+	RoutingKey string
 }
 
 // Publisher 事件發布者接口

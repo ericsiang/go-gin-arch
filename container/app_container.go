@@ -59,7 +59,7 @@ func (c *AppContainer) Initialize(configPath string) error {
 	fmt.Printf("Gin mode: %s\n", c.config.AppMode)
 
 	// 3. 初始化基础设施
-	if err := c.initInfrastructure(); err != nil {
+	if err := c.InitInfrastructure(); err != nil {
 		return fmt.Errorf("failed to initialize infrastructure: %w", err)
 	}
 
@@ -67,8 +67,8 @@ func (c *AppContainer) Initialize(configPath string) error {
 	return nil
 }
 
-// initInfrastructure 初始化所有基础设施组件
-func (c *AppContainer) initInfrastructure() error {
+// InitInfrastructure 初始化所有基础设施组件
+func (c *AppContainer) InitInfrastructure() error {
 	// 初始化数据库
 	if c.config.MysqlDB.IsEnabled {
 		mysqlDB, err := InitMysql(c.config)

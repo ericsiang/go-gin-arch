@@ -4,6 +4,8 @@ package env
 import (
 	"errors"
 	"fmt"
+
+
 	"strings"
 	"sync"
 )
@@ -111,15 +113,51 @@ func (c *RedisConfig) String() string {
 		c.Host, c.Port, c.DBName)
 }
 
+// RabbitMQConfig RabbitMQ 消息隊列配置
+type RabbitMQConfig struct {
+	IsEnabled bool   `mapstructure:"isEnabled" json:"is_enabled"`
+	Host      string `mapstructure:"host" json:"host"`
+	Port      int    `mapstructure:"port" json:"port"`
+	User      string `mapstructure:"user" json:"user"`
+	Password  string `mapstructure:"password" json:"password"`
+	Exchange  string `mapstructure:"exchange" json:"exchange"`
+	VHost     string `mapstructure:"vHost" json:"vHost"`
+}
+
+// Validate 驗證 RabbitMQ 配置
+func (c *RabbitMQConfig) Validate() error {
+	if c.Host == "" {
+		return errors.New("rabbitmq host is required")
+	}
+	if c.Port <= 0 || c.Port > 65535 {
+		return errors.New("rabbitmq port must be between 1 and 65535")
+	}
+	if c.User == "" {
+		return errors.New("rabbitmq user is required")
+	}
+	if c.Exchange == "" {
+		return errors.New("rabbitmq exchange is required")
+	}
+	return nil
+}
+
+// String 實現 Stringer 接口（脫敏密碼）
+func (c *RabbitMQConfig) String() string {
+	return fmt.Sprintf("RabbitMQConfig{Host:%s, Port:%d, User:%s, Exchange:%s, Password:***}",
+		c.Host, c.Port, c.User, c.Exchange)
+}
+
 // ServerConfig 服務器配置
 type ServerConfig struct {
-	AppMode       string        `mapstructure:"APP_Mode" json:"APP_Mode"`
-	Port          int           `mapstructure:"Port" json:"Port"`
-	JwtSecret     string        `mapstructure:"JwtSecret" json:"JwtSecret"`
-	IsEventBroker bool          `mapstructure:"IsEventBroker" json:"IsEventBroker"`
-	MysqlDB       MysqlConfig   `mapstructure:"Mysql" json:"Mysql"`
-	Redis         RedisConfig   `mapstructure:"Redis" json:"Redis"`
-	MongoDB       MongoDBConfig `mapstructure:"MongoDB" json:"MongoDB"`
+	AppMode         string         `mapstructure:"APP_Mode" json:"APP_Mode"`
+	Port            int            `mapstructure:"Port" json:"Port"`
+	JwtSecret       string         `mapstructure:"JwtSecret" json:"JwtSecret"`
+	MysqlDB         MysqlConfig    `mapstructure:"Mysql" json:"Mysql"`
+	Redis           RedisConfig    `mapstructure:"Redis" json:"Redis"`
+	MongoDB         MongoDBConfig  `mapstructure:"MongoDB" json:"MongoDB"`
+	RabbitMQ        RabbitMQConfig `mapstructure:"RabbitMQ" json:"RabbitMQ"`
+	IsEventBroker   bool           `mapstructure:"IsEventBroker" json:"IsEventBroker"`
+	EventBrokerType string         `mapstructure:"EventBrokerType" json:"EventBrokerType"`
 }
 
 // NewServerConfig 創建一個空的服務器配置實例
@@ -166,6 +204,13 @@ func (c *ServerConfig) Validate() error {
 	// 	return fmt.Errorf("redis config error: %w", err)
 	// }
 
+	// RabbitMQ 可選，只在啟用時驗證
+	if c.RabbitMQ.IsEnabled {
+		if err := c.RabbitMQ.Validate(); err != nil {
+			return fmt.Errorf("rabbitmq config error: %w", err)
+		}
+	}
+
 	return nil
 }
 
@@ -178,7 +223,8 @@ func (c *ServerConfig) String() string {
 	MySQL: %s
 	Redis: %s
 	MongoDB: %s
-}`, c.AppMode, c.Port, c.MysqlDB.String(), c.Redis.String(), c.MongoDB.String())
+	RabbitMQ: %s
+}`, c.AppMode, c.Port, c.MysqlDB.String(), c.Redis.String(), c.MongoDB.String(), c.RabbitMQ.String())
 }
 
 // ConfigManager 配置管理器（線程安全）
