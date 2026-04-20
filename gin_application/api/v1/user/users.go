@@ -39,7 +39,7 @@ func CreateUser(ctx *gin.Context) {
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() ShouldBindBodyWith fail", err)
-		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
@@ -79,7 +79,7 @@ func UserLogin(ctx *gin.Context) {
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() ShouldBindBodyWith fail", err)
-		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 

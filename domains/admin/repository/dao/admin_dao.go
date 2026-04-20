@@ -3,8 +3,11 @@ package dao
 
 import (
 	"fmt"
+	"self_go_gin/common/msgid"
 	"self_go_gin/container"
 	"self_go_gin/domains/admin/repository/model"
+	"self_go_gin/domains/common/appmsg"
+	apperror "self_go_gin/internal/apperror"
 	"self_go_gin/internal/dao"
 
 	"gorm.io/gorm"
@@ -27,7 +30,12 @@ func NewAdminDao() (AdminDao, error) {
 	appDB := app.GetMySQLDB()
 	db, ok := appDB.GetDB().(*gorm.DB) // 獲取底層 DB 實例
 	if !ok {
-		return nil, fmt.Errorf("failed to get gorm.DB instance")
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAODatabaseConnectionFailed,
+			fmt.Errorf("failed to get gorm.DB instance"),
+			nil,
+		)
 	}
 	return &adminDaoImpl{
 		GenericDao: dao.NewGenericDAO[model.Admin](db),
@@ -41,25 +49,38 @@ func (d *adminDaoImpl) GetGenericDao() dao.GenericDaoInterface[model.Admin] {
 
 // GetAdminByAccount 根據帳號查詢管理員
 func (d *adminDaoImpl) GetAdminByAccount(account string) (*model.Admin, error) {
-	logData := map[string]interface{}{
-		"account": account,
-	}
 	var adminPO model.Admin
 	err := d.GenericDao.GetDB().Where("account = ?", account).First(&adminPO).Error
 	if err != nil {
-		return nil, fmt.Errorf("AdminDaoImpl GetAdminByAccount() data: %s \n %w", logData, err)
+		// 記錄不存在不是錯誤，直接返回
+		if err == gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		// 只包裝真正的數據庫錯誤
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAOQueryRecordsFailed,
+			fmt.Errorf("AdminDaoImpl GetAdminByAccount() account: %s, error: %w", account, err),
+			map[string]interface{}{
+				"account": account,
+			},
+		)
 	}
 	return &adminPO, nil
 }
 
 // Create 創建管理員
 func (d *adminDaoImpl) Create(adminPO *model.Admin) (*model.Admin, error) {
-	logData := map[string]interface{}{
-		"adminPO": adminPO,
-	}
 	err := d.GenericDao.GetDB().Create(adminPO).Error
 	if err != nil {
-		return nil, fmt.Errorf("AdminDaoImpl Create() data: %s \n %w", logData, err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAOCreateRecordFailed,
+			fmt.Errorf("AdminDaoImpl Create() error: %w", err),
+			map[string]interface{}{
+				"adminPO": adminPO,
+			},
+		)
 	}
 	return adminPO, nil
 }

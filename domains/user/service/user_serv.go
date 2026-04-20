@@ -7,14 +7,16 @@ import (
 	"fmt"
 	"time"
 
+	"self_go_gin/common/msgid"
 	"self_go_gin/container"
+	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/domains/user/entity"
+	apperror "self_go_gin/internal/apperror"
 
 	"self_go_gin/domains/user/events"
 	"self_go_gin/domains/user/repository"
 	"self_go_gin/gin_application/api/v1/user/request"
-	"self_go_gin/gin_application/handler"
 	"self_go_gin/infra/event"
 	jwtsecret "self_go_gin/util/jwt_secret"
 
@@ -53,23 +55,45 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	// 創建帳號值物件（自動驗證格式）
 	account, err := valueobj.NewAccount(req.Account)
 	if err != nil {
-		return nil, fmt.Errorf("invalid account: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.UserAccountFormatInvalid,
+			fmt.Errorf("invalid account format: %w", err),
+			nil,
+		)
 	}
 
 	// 創建密碼值物件（自動驗證強度和加密）
 	password, err := valueobj.NewPasswordFromPlainText(req.Password)
 	if err != nil {
-		return nil, fmt.Errorf("invalid password: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.UserPasswordInvalidOrWeak,
+			fmt.Errorf("invalid password: %w", err),
+			map[string]interface{}{
+				"password":req.Password,
+			},
+		)
 	}
 
 	// 檢查帳號是否已存在
 	_, err = s.repo.GetUsersByAccount(req.Account)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("check account existence failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserCheckAccountExistFailed,
+			fmt.Errorf("check account existence failed: %w", err),
+			nil,
+		)
 	}
 	if err == nil {
 		// 帳號已存在
-		return nil, fmt.Errorf("account already exists: %w", handler.ErrResourceExist)
+		return nil, apperror.NewAppError(
+			msgid.ResourceExist,
+			appmsg.UserAccountAlreadyExists,
+			fmt.Errorf("account already exists"),
+			nil,
+		)
 	}
 
 	// 創建聚合根
@@ -78,7 +102,14 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	// 儲存到資料庫
 	createdUser, err := s.repo.CreateUser(user)
 	if err != nil {
-		return nil, fmt.Errorf("create user failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserCreateFailed,
+			fmt.Errorf("create user failed: %w", err),
+			map[string]interface{}{
+				"user":user,
+			},
+		)
 	}
 
 	// 發布用戶創建事件
@@ -97,27 +128,58 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	// 先驗證帳號格式（快速失敗）
 	account, err := valueobj.NewAccount(req.Account)
 	if err != nil {
-		return nil, fmt.Errorf("invalid account format: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.UserAccountFormatInvalid,
+			fmt.Errorf("invalid account format: %w", err),
+			map[string]interface{}{
+				"account": req.Account,
+			},
+		)
 	}
 
 	// 查詢用戶
 	user, err := s.repo.GetUsersByAccount(account.Value())
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("user not found")
+			return nil, apperror.NewAppError(
+				msgid.NoContent,
+				appmsg.UserNotFound,
+				fmt.Errorf("user not found"),
+				map[string]interface{}{
+					"user":user,
+				},
+			)
 		}
-		return nil, fmt.Errorf("get user failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserQueryFailed,
+			fmt.Errorf("get user failed: %w", err),
+			map[string]interface{}{
+				"user":user,
+			},
+		)
 	}
 
 	// 驗證密碼
 	if !user.VerifyPassword(req.Password) {
-		return nil, fmt.Errorf("password incorrect")
+		return nil, apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.UserPasswordIncorrect,
+			fmt.Errorf("password incorrect"),
+			nil,
+		)
 	}
 
 	// 生成 JWT Token
 	jwtToken, err := jwtsecret.GenerateToken(jwtsecret.LoginUser, user.ID)
 	if err != nil {
-		return nil, fmt.Errorf("generate token failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserTokenGenerateFailed,
+			fmt.Errorf("generate token failed: %w", err),
+			nil,
+		)
 	}
 
 	return &jwtToken, nil

@@ -4,6 +4,9 @@ package events
 import (
 	"context"
 	"fmt"
+	"self_go_gin/common/msgid"
+	"self_go_gin/domains/common/appmsg"
+	apperror "self_go_gin/internal/apperror"
 
 	"self_go_gin/infra/event"
 
@@ -59,7 +62,12 @@ func (h *UserCreatedEventHandler) EventType() string {
 func (h *UserCreatedEventHandler) Handle(_ context.Context, evt *event.Event) error {
 	var payload UserCreatedEventPayload
 	if err := evt.UnmarshalPayload(&payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPayloadParseFailed,
+			fmt.Errorf("failed to unmarshal payload: %w", err),
+			nil,
+		)
 	}
 
 	// 這裡實現具體的業務邏輯
@@ -87,7 +95,12 @@ func (h *UserUpdatedEventHandler) EventType() string {
 func (h *UserUpdatedEventHandler) Handle(_ context.Context, evt *event.Event) error {
 	var payload UserUpdatedEventPayload
 	if err := evt.UnmarshalPayload(&payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPayloadParseFailed,
+			fmt.Errorf("failed to unmarshal payload: %w", err),
+			nil,
+		)
 	}
 
 	zap.S().Infof("Processing user update event for UserID: %d, Account: %s", payload.UserID, payload.Account)
@@ -113,7 +126,12 @@ func (h *UserDeletedEventHandler) EventType() string {
 func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) error {
 	var payload UserDeletedEventPayload
 	if err := evt.UnmarshalPayload(&payload); err != nil {
-		return fmt.Errorf("failed to unmarshal payload: %w", err)
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPayloadParseFailed,
+			fmt.Errorf("failed to unmarshal payload: %w", err),
+			nil,
+		)
 	}
 
 	zap.S().Infof("Processing user deletion event for UserID: %d, Account: %s", payload.UserID, payload.Account)

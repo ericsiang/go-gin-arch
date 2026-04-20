@@ -3,8 +3,11 @@ package dao
 
 import (
 	"fmt"
+	"self_go_gin/common/msgid"
 	"self_go_gin/container"
+	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/user/repository/model"
+	apperror "self_go_gin/internal/apperror"
 	"self_go_gin/internal/dao"
 
 	"gorm.io/gorm"
@@ -27,8 +30,13 @@ func NewUserDao() (UserDaoInterface, error) {
 	app := container.GetContainer()
 	appDB := app.GetMySQLDB()
 	db, ok := appDB.GetDB().(*gorm.DB)
-	if !ok || db ==nil{
-		return nil, fmt.Errorf("failed to get gorm.DB instance")
+	if !ok || db == nil {
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAODatabaseConnectionFailed,
+			fmt.Errorf("failed to get gorm.DB instance"),
+			nil,
+		)
 	}
 	return &userDaoImpl{
 		GenericDao: dao.NewGenericDAO[model.User](db),
@@ -41,25 +49,38 @@ func (d *userDaoImpl) GetGenericDao() dao.GenericDaoInterface[model.User] {
 
 // GetUsersByAccount 根據帳號查詢用戶
 func (d *userDaoImpl) GetUsersByAccount(account string) (*model.User, error) {
-	logData := map[string]interface{}{
-		"account": account,
-	}
 	var userPO model.User
 	err := d.GenericDao.GetDB().Where("account = ?", account).First(&userPO).Error
 	if err != nil {
-		return nil, fmt.Errorf("UserDaoImpl GetUsersByAccount() data: %s \n %w", logData, err)
+		// 記錄不存在不是錯誤，直接返回
+		if err == gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		// 只包裝真正的數據庫錯誤
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAOQueryRecordsFailed,
+			fmt.Errorf("UserDaoImpl GetUsersByAccount() account: %s, error: %w", account, err),
+			map[string]interface{}{
+				"account": account,
+			},
+		)
 	}
 	return &userPO, nil
 }
 
 // Create 創建用戶
 func (d *userDaoImpl) Create(userPO *model.User) (*model.User, error) {
-	logData := map[string]interface{}{
-		"userPO": userPO,
-	}
 	err := d.GenericDao.GetDB().Create(userPO).Error
 	if err != nil {
-		return nil, fmt.Errorf("UserDaoImpl Create() data: %s \n %w", logData, err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.DAOCreateRecordFailed,
+			fmt.Errorf("UserDaoImpl Create() error: %w", err),
+			map[string]interface{}{
+				"userPO": userPO,
+			},
+		)
 	}
 	return userPO, nil
 }

@@ -38,7 +38,7 @@ func CreateAdmin(ctx *gin.Context) {
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		zap.L().Error("\n Api CreateAdmin() 失敗(ShouldBindBodyWith fail) : " + err.Error())
-		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
@@ -84,7 +84,7 @@ func AdminLogin(ctx *gin.Context) {
 		}
 		// 非validator.ValidationErrors類型錯誤直接傳回
 		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() ShouldBindBodyWith fail", err)
-		ginresp.ErrorResponse(ctx, http.StatusNotFound, "invalid_request_parameters", msgid.Fail, nil)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 

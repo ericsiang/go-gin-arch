@@ -2,8 +2,12 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
+	"self_go_gin/common/msgid"
+	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
+	apperror "self_go_gin/internal/apperror"
 
 	"self_go_gin/domains/user/entity"
 	"self_go_gin/domains/user/repository/dao"
@@ -28,7 +32,14 @@ type userRepositoryImpl struct {
 func NewUserRepository() (UserRepository, error) {
 	dao, err := dao.NewUserDao()
 	if err != nil {
-		return nil, fmt.Errorf("UserRepository NewUserRepository(): %w", err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.RepositoryInitFailed,
+			fmt.Errorf("UserRepository NewUserRepository(): %w", err),
+			map[string]interface{}{
+				"operation": "NewUserRepository",
+			},
+		)
 	}
 	return &userRepositoryImpl{
 		dao: dao,
@@ -41,18 +52,38 @@ func (r *userRepositoryImpl) GetDB() *gorm.DB {
 
 // GetUsersByAccount 根據帳號查詢用戶
 func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
-	logData := map[string]interface{}{
-		"account": account,
-	}
-
 	userModel, err := r.dao.GetUsersByAccount(account)
 	if err != nil {
-		return nil, fmt.Errorf("UserRepositoryImpl GetUsersByAccount() data: %s \n %w", logData, err)
+		// 記錄不存在不是錯誤，直接返回
+		if err == gorm.ErrRecordNotFound {
+			return nil, err
+		}
+		// 檢查是否是 AppError（來自 DAO 層的真正錯誤）
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			return nil, err // 直接返回 DAO 層的 AppError
+		}
+		// 其他未知錯誤
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.RepositoryQueryFailed,
+			fmt.Errorf("UserRepositoryImpl GetUsersByAccount() account: %s, error: %w", account, err),
+			map[string]interface{}{
+				"account": account,
+			},
+		)
 	}
 
 	user, err := r.modelToDomain(userModel)
 	if err != nil {
-		return nil, fmt.Errorf("UserRepositoryImpl GetUsersByAccount() convert PO to domain failed: %w", err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.RepositoryDataConversionFailed,
+			fmt.Errorf("UserRepositoryImpl GetUsersByAccount() convert PO to domain failed: %w", err),
+			map[string]interface{}{
+				"account": account,
+			},
+		)
 	}
 
 	return user, nil
@@ -60,20 +91,30 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 
 // CreateUser 創建用戶
 func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, error) {
-	logData := map[string]interface{}{
-		"newUser": newUser,
-	}
-
 	userModel := r.domainToModel(newUser)
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(userModel)
 	if err != nil {
-		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() data: %s \n %w", logData, err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			appmsg.RepositoryCreateFailed,
+			fmt.Errorf("UserRepositoryImpl CreateUser() error: %w", err),
+			map[string]interface{}{
+				"account": newUser.GetAccount(),
+			},
+		)
 	}
 
 	user, err := r.modelToDomain(createdPO)
 	if err != nil {
-		return nil, fmt.Errorf("UserRepositoryImpl CreateUser() convert PO to domain failed: %w", err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			"用戶數據轉換失敗",
+			fmt.Errorf("UserRepositoryImpl CreateUser() convert PO to domain failed: %w", err),
+			map[string]interface{}{
+				"account": newUser.GetAccount(),
+			},
+		)
 	}
 
 	return user, nil
@@ -96,7 +137,15 @@ func (r *userRepositoryImpl) modelToDomain(model *model.User) (*entity.User, err
 	account, err := valueobj.NewAccount(model.Account)
 	if err != nil {
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
-		return nil, fmt.Errorf("invalid account in database: %w", err)
+		return nil, apperror.NewAppErrorWithLogData(
+			msgid.Fail,
+			"用戶數據損壞",
+			fmt.Errorf("invalid account in database: %w", err),
+			map[string]interface{}{
+				"account_from_db": model.Account,
+				"user_id":         model.ID,
+			},
+		)
 	}
 
 	password := valueobj.NewPasswordFromHash(model.Password)

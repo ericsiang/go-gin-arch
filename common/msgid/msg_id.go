@@ -21,4 +21,6 @@ const (
 	RuleNotAllow
 	// ResourceExist 資源已存在
 	ResourceExist
+	// InvalidInput 輸入驗證失敗（帳號格式、密碼強度等）
+	InvalidInput
 )

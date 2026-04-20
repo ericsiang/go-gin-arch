@@ -3,11 +3,13 @@ package repository
 
 import (
 	"fmt"
+	"self_go_gin/common/msgid"
 
 	"self_go_gin/domains/admin/entity"
 	"self_go_gin/domains/admin/repository/dao"
 	"self_go_gin/domains/admin/repository/model"
 	"self_go_gin/domains/common/valueobj"
+	apperror "self_go_gin/internal/apperror"
 
 	"gorm.io/gorm"
 )
@@ -27,7 +29,12 @@ type adminRepositoryImpl struct {
 func NewAdminRepository() (AdminRepository, error) {
 	dao, err := dao.NewAdminDao()
 	if err != nil {
-		return nil, fmt.Errorf("AdminRepository NewAdminRepository() : %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"初始化管理員倉庫失敗",
+			fmt.Errorf("AdminRepository NewAdminRepository() : %w", err),
+			nil,
+		)
 	}
 
 	return &adminRepositoryImpl{
@@ -41,20 +48,30 @@ func (r *adminRepositoryImpl) GetDB() *gorm.DB {
 
 // GetAdminByAccount 根據帳號查詢管理員
 func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*entity.Admin, error) {
-	logData := map[string]interface{}{
-		"account": account,
-	}
-
 	// 從 DAO 層取得 PO
 	adminPO, err := r.dao.GetAdminByAccount(account)
 	if err != nil {
-		return nil, fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() data: %s \n %w", logData, err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"查詢管理員失敗",
+			fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() account: %s, error: %w", account, err),
+			map[string]interface{}{
+				"account": account,
+			},
+		)
 	}
 
 	// PO -> 領域模型轉換
 	admin, err := r.modelToDomain(adminPO)
 	if err != nil {
-		return nil, fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() convert PO to domain failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"管理員數據轉換失敗",
+			fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() convert PO to domain failed: %w", err),
+			map[string]interface{}{
+				"adminPO": adminPO,
+			},
+		)
 	}
 
 	return admin, nil
@@ -62,23 +79,33 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*entity.Admin, 
 
 // CreateAdmin 創建管理員
 func (r *adminRepositoryImpl) CreateAdmin(newAdmin *entity.Admin) (*entity.Admin, error) {
-	logData := map[string]interface{}{
-		"newAdmin": newAdmin,
-	}
-
 	// 領域模型 -> PO 轉換
 	adminPO := r.domainTomodel(newAdmin)
 
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(adminPO)
 	if err != nil {
-		return nil, fmt.Errorf("AdminRepositoryImpl CreateAdmin() data: %s \n %w", logData, err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"建立管理員失敗",
+			fmt.Errorf("AdminRepositoryImpl CreateAdmin() error: %w", err),
+			map[string]interface{}{
+				"adminPO": adminPO,
+			},
+		)
 	}
 
 	// PO -> 領域模型轉換
 	admin, err := r.modelToDomain(createdPO)
 	if err != nil {
-		return nil, fmt.Errorf("AdminRepositoryImpl CreateAdmin() convert PO to domain failed: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"管理員數據轉換失敗",
+			fmt.Errorf("AdminRepositoryImpl CreateAdmin() convert PO to domain failed: %w", err),
+			map[string]interface{}{
+				"createdPO": createdPO,
+			},
+		)
 	}
 
 	return admin, nil
@@ -101,7 +128,14 @@ func (r *adminRepositoryImpl) modelToDomain(po *model.Admin) (*entity.Admin, err
 	account, err := valueobj.NewAccount(po.Account)
 	if err != nil {
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
-		return nil, fmt.Errorf("invalid account in database: %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			"管理員數據損壞",
+			fmt.Errorf("invalid account in database: %w", err),
+			map[string]interface{}{
+				"account": po.Account,
+			},
+		)
 	}
 
 	password := valueobj.NewPasswordFromHash(po.Password)

@@ -2,7 +2,10 @@ package handler
 
 import (
 	"fmt"
+	"self_go_gin/common/msgid"
+	"self_go_gin/domains/common/appmsg"
 	ginresp "self_go_gin/gin_application/inter/response"
+	apperror "self_go_gin/internal/apperror"
 
 	"net/http"
 
@@ -28,7 +31,12 @@ var (
 func GetHandler(ctx *gin.Context, err error) (bool, error) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
-		return false, fmt.Errorf("GetHandler() \n %w", err)
+		return false, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.HandlerGetDataFailed,
+			fmt.Errorf("GetHandler() error: %w", err),
+			nil,
+		)
 	}
 	return true, nil
 }
@@ -38,10 +46,20 @@ func CreateHandler(ctx *gin.Context, err error) (bool, error) {
 	if err != nil {
 		mysqlErrorCheck, err := MysqlErrorCheck(ctx, err)
 		if mysqlErrorCheck {
-			return false, fmt.Errorf("CreateHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.Fail,
+				appmsg.HandlerMySQLError,
+				fmt.Errorf("CreateHandler() MySQL error: %w", err),
+				nil,
+			)
 		}
 		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
-		return false, fmt.Errorf("CreateHandler() \n %w", err)
+		return false, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.HandlerCreateDataFailed,
+			fmt.Errorf("CreateHandler() error: %w", err),
+			nil,
+		)
 
 	}
 	return true, nil
@@ -54,14 +72,29 @@ func UpdateHandler(ctx *gin.Context, err error) (bool, error) {
 			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: "record_not_found",
 			})
-			return false, fmt.Errorf("UpdateHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.NoContent,
+				appmsg.HandlerRecordNotFound,
+				fmt.Errorf("UpdateHandler() record not found: %w", err),
+				nil,
+			)
 		}
 		mysqlErrorCheck, err := MysqlErrorCheck(ctx, err)
 		if mysqlErrorCheck {
-			return false, fmt.Errorf("UpdateHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.Fail,
+				appmsg.HandlerMySQLError,
+				fmt.Errorf("UpdateHandler() MySQL error: %w", err),
+				nil,
+			)
 		}
 		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
-		return false, fmt.Errorf("UpdateHandler() \n %w", err)
+		return false, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.HandlerUpdateDataFailed,
+			fmt.Errorf("UpdateHandler() error: %w", err),
+			nil,
+		)
 
 	}
 	return true, nil
@@ -74,20 +107,40 @@ func DeleteHandler(ctx *gin.Context, err error) (bool, error) {
 			ctx.JSON(http.StatusAccepted, ginresp.FailResponse{
 				Msg: ErrDeleteNotAllow.Error(),
 			})
-			return false, fmt.Errorf("DeleteHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.Fail,
+				appmsg.HandlerDeleteNotAllow,
+				fmt.Errorf("DeleteHandler() delete not allowed: %w", err),
+				nil,
+			)
 		} else if errors.Is(err, gorm.ErrRecordNotFound) {
 			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: "record_not_found",
 			})
-			return false, fmt.Errorf("DeleteHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.NoContent,
+				appmsg.HandlerRecordNotFound,
+				fmt.Errorf("DeleteHandler() record not found: %w", err),
+				nil,
+			)
 		} else if errors.Is(err, ErrResourceNotFound) {
 			ctx.JSON(http.StatusNotFound, ginresp.FailResponse{
 				Msg: ErrResourceNotFound.Error(),
 			})
-			return false, fmt.Errorf("DeleteHandler() \n %w", err)
+			return false, apperror.NewAppError(
+				msgid.NoContent,
+				appmsg.HandlerResourceNotFound,
+				fmt.Errorf("DeleteHandler() resource not found: %w", err),
+				nil,
+			)
 		}
 		ctx.JSON(http.StatusInternalServerError, ginresp.FailResponse{})
-		return false, fmt.Errorf("DeleteHandler() \n %w", err)
+		return false, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.HandlerDeleteDataFailed,
+			fmt.Errorf("DeleteHandler() error: %w", err),
+			nil,
+		)
 
 	}
 	return true, nil
