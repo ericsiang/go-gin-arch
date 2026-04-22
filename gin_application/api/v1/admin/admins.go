@@ -11,10 +11,10 @@ import (
 	"self_go_gin/gin_application/handler"
 	ginlogger "self_go_gin/gin_application/inter/log"
 	ginresp "self_go_gin/gin_application/inter/response"
+	"self_go_gin/internal/apperror"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"go.uber.org/zap"
 )
 
 // CreateAdmin 創建管理員
@@ -33,25 +33,25 @@ func CreateAdmin(ctx *gin.Context) {
 	if err := ctx.ShouldBindBodyWith(&data, binding.JSON); err != nil {
 		check := handler.ValidCheckAndTrans(ctx, err)
 		if check {
-			ginresp.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
 			return
 		}
+		appError := apperror.NewAppError(msgid.NotAppError, "類型錯誤", err, nil)
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		zap.L().Error("\n Api CreateAdmin() 失敗(ShouldBindBodyWith fail) : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() ShouldBindBodyWith fail", appError)
 		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	adminService, err := service.NewAdminService()
 	if err != nil {
-		zap.L().Error("\n Api CreateAdmin() NewAdminService fail : " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() NewAdminService() fail", err)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	admin, err := adminService.CreateAdmin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		zap.L().Error("\n Api CreateAdmin() \n " + err.Error())
+		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() CreateAdmin() fail", err)
 		return
 	}
 
@@ -79,11 +79,11 @@ func AdminLogin(ctx *gin.Context) {
 	if err := ctx.ShouldBindBodyWith(&data, binding.JSON); err != nil {
 		check := handler.ValidCheckAndTrans(ctx, err)
 		if check {
-			ginresp.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
 			return
 		}
+		appError := apperror.NewAppError(msgid.NotAppError, "類型錯誤", err, nil)
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() ShouldBindBodyWith fail", err)
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() ShouldBindBodyWith fail", appError)
 		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}

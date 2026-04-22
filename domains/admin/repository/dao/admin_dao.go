@@ -2,11 +2,11 @@
 package dao
 
 import (
-	"fmt"
 	"self_go_gin/common/msgid"
 	"self_go_gin/container"
 	"self_go_gin/domains/admin/repository/model"
 	"self_go_gin/domains/common/appmsg"
+	"self_go_gin/gin_application/handler"
 	apperror "self_go_gin/internal/apperror"
 	"self_go_gin/internal/dao"
 
@@ -30,11 +30,11 @@ func NewAdminDao() (AdminDao, error) {
 	appDB := app.GetMySQLDB()
 	db, ok := appDB.GetDB().(*gorm.DB) // 獲取底層 DB 實例
 	if !ok {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.DAODatabaseConnectionFailed,
-			fmt.Errorf("failed to get gorm.DB instance"),
-			nil,
+			appmsg.DatabaseConnectionFailed,
+			handler.ErrGetDBFailed,
+			apperror.WithLayer("AdminDao NewAdminDao()"),
 		)
 	}
 	return &adminDaoImpl{
@@ -57,13 +57,14 @@ func (d *adminDaoImpl) GetAdminByAccount(account string) (*model.Admin, error) {
 			return nil, err
 		}
 		// 只包裝真正的數據庫錯誤
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.DAOQueryRecordsFailed,
-			fmt.Errorf("AdminDaoImpl GetAdminByAccount() account: %s, error: %w", account, err),
-			map[string]interface{}{
+			appmsg.QueryFailed,
+			err,
+			apperror.WithLayer("AdminDaoImpl GetAdminByAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": account,
-			},
+			}),
 		)
 	}
 	return &adminPO, nil
@@ -73,13 +74,14 @@ func (d *adminDaoImpl) GetAdminByAccount(account string) (*model.Admin, error) {
 func (d *adminDaoImpl) Create(adminPO *model.Admin) (*model.Admin, error) {
 	err := d.GenericDao.GetDB().Create(adminPO).Error
 	if err != nil {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.DAOCreateRecordFailed,
-			fmt.Errorf("AdminDaoImpl Create() error: %w", err),
-			map[string]interface{}{
+			appmsg.CreateFailed,
+			err,
+			apperror.WithLayer("AdminDaoImpl Create()"),
+			apperror.WithLogData(map[string]interface{}{
 				"adminPO": adminPO,
-			},
+			}),
 		)
 	}
 	return adminPO, nil

@@ -11,6 +11,7 @@ import (
 	"self_go_gin/gin_application/handler"
 	ginlogger "self_go_gin/gin_application/inter/log"
 	ginresp "self_go_gin/gin_application/inter/response"
+	"self_go_gin/internal/apperror"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -37,22 +38,25 @@ func CreateUser(ctx *gin.Context) {
 			// gin_response.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", common_msg_id.Fail, nil)
 			return
 		}
+		appError := apperror.NewAppError(msgid.NotAppError, "類型錯誤", err, nil)
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() ShouldBindBodyWith fail", err)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() ShouldBindBodyWith fail", appError)
 		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
-		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewUserService fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewUserService fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	_, err = userService.CreateUser(ctx, data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() CreateUser fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() CreateUser fail", appErr)
 		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", nil, msgid.Success)
@@ -74,25 +78,29 @@ func UserLogin(ctx *gin.Context) {
 	if err := ctx.ShouldBindBodyWith(&data, binding.JSON); err != nil {
 		check := handler.ValidCheckAndTrans(ctx, err)
 		if check {
-			ginresp.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
+			// ginresp.ErrorResponse(ctx, http.StatusBadRequest, "request_parameter_validation_failed", msgid.Fail, nil)
 			return
 		}
+		appError := apperror.NewAppError(msgid.NotAppError, "類型錯誤", err, nil)
 		// 非validator.ValidationErrors類型錯誤直接傳回
-		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() ShouldBindBodyWith fail", err)
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() ShouldBindBodyWith fail", appError)
 		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_request_parameters", msgid.Fail, nil)
 		return
 	}
 
 	userService, err := service.NewUserService()
 	if err != nil {
-		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewUserService fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewUserService fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 	jwtToken, err := userService.CheckLogin(data)
+
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		ginlogger.LogErrorWithStack(ctx, "Api UserLogin()", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin()", appErr)
 		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", ginresp.CreateMsgData("jwt_token", *jwtToken), msgid.Success)

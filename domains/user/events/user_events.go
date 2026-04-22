@@ -66,7 +66,7 @@ func (h *UserCreatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 			msgid.Fail,
 			appmsg.UserEventPayloadParseFailed,
 			fmt.Errorf("failed to unmarshal payload: %w", err),
-			nil,
+			apperror.WithLayer("Event"),
 		)
 	}
 
@@ -99,7 +99,7 @@ func (h *UserUpdatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 			msgid.Fail,
 			appmsg.UserEventPayloadParseFailed,
 			fmt.Errorf("failed to unmarshal payload: %w", err),
-			nil,
+			apperror.WithLayer("Event"),
 		)
 	}
 
@@ -130,7 +130,7 @@ func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) er
 			msgid.Fail,
 			appmsg.UserEventPayloadParseFailed,
 			fmt.Errorf("failed to unmarshal payload: %w", err),
-			nil,
+			apperror.WithLayer("Event"),
 		)
 	}
 

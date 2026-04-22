@@ -2,52 +2,30 @@
 package appmsg
 
 // 这里集中管理所有的错误消息，方便复用和统一修改
-// ===== User Service Messages =====
 
-// User Account Validation
+// Account Validation
 //
 //nolint:gosec
 const (
-	UserAccountFormatInvalid    string = "帳號格式無效"
-	UserPasswordInvalidOrWeak   string = "密碼格式或強度不符合要求"
-	UserAccountAlreadyExists    string = "帳號已存在"
-	UserCheckAccountExistFailed string = "驗證帳號存在狀態失敗"
-	UserCreateFailed            string = "建立用戶失敗"
-	UserNotFound                string = "用戶不存在"
-	UserQueryFailed             string = "查詢用戶失敗"
-	UserPasswordIncorrect       string = "帳號或密碼錯誤"
-	UserTokenGenerateFailed     string = "生成令牌失敗"
-	UserDataCorrupted           string = "用戶數據損壞"
+	AccountFormatInvalid    string = "帳號格式無效"
+	PasswordInvalidOrWeak   string = "密碼格式或強度不符合要求"
+	AccountAlreadyExists    string = "帳號已存在"
+	CheckAccountExistFailed string = "驗證帳號存在狀態失敗"
+	PasswordIncorrect       string = "帳號或密碼錯誤"
+	TokenGenerateFailed     string = "生成令牌失敗"
 )
 
-// ===== Admin Service Messages =====
+// ===== DB Messages =====
 //
 //nolint:gosec
 const (
-	AdminAccountFormatInvalid    string = "帳號格式無效"
-	AdminPasswordInvalidOrWeak   string = "密碼格式或強度不符合要求"
-	AdminAccountAlreadyExists    string = "帳號已存在"
-	AdminCheckAccountExistFailed string = "驗證帳號存在狀態失敗"
-	AdminCreateFailed            string = "建立管理員失敗"
-	AdminNotFound                string = "管理員不存在"
-	AdminQueryFailed             string = "查詢管理員失敗"
-	AdminPasswordIncorrect       string = "帳號或密碼錯誤"
-	AdminTokenGenerateFailed     string = "生成令牌失敗"
-	AdminDataCorrupted           string = "管理員數據損壞"
-)
-
-// ===== Repository Messages =====
-//
-//nolint:gosec
-const (
-	RepositoryInitFailed           string = "初始化倉庫失敗"
-	RepositoryQueryFailed          string = "查詢失敗"
-	RepositoryCreateFailed         string = "創建失敗"
-	RepositoryDataConversionFailed string = "數據轉換失敗"
-	DAOInitFailed                  string = "初始化數據訪問層失敗"
-	DAODatabaseConnectionFailed    string = "初始化數據庫連接失敗"
-	DAOQueryRecordsFailed          string = "查詢記錄失敗"
-	DAOCreateRecordFailed          string = "保存記錄失敗"
+	InitFailed               string = "初始化失敗"
+	QueryFailed              string = "查詢失敗"
+	CreateFailed             string = "創建失敗"
+	DataConversionFailed     string = "數據轉換失敗"
+	DatabaseConnectionFailed string = "初始化數據庫連接失敗"
+	RecordNotFound           string = "記錄不存在"
+	DuplicateEntry           string = "資源重複"
 )
 
 // ===== Event Handler Messages =====
@@ -55,19 +33,14 @@ const (
 //nolint:gosec
 const (
 	UserEventPayloadParseFailed  string = "事件數據解析失敗"
+	UserEventPublishFailed       string = "事件發布失敗"
 	AdminEventPayloadParseFailed string = "事件數據解析失敗"
 )
 
-// ===== Handler Messages =====
+
+// ===== Redis Messages =====
 //
 //nolint:gosec
 const (
-	HandlerGetDataFailed    string = "獲取資料失敗"
-	HandlerCreateDataFailed string = "創建資料失敗"
-	HandlerUpdateDataFailed string = "更新資料失敗"
-	HandlerDeleteDataFailed string = "刪除資料失敗"
-	HandlerMySQLError       string = "數據庫錯誤"
-	HandlerRecordNotFound   string = "記錄不存在"
-	HandlerResourceNotFound string = "資源不存在"
-	HandlerDeleteNotAllow   string = "刪除不允许"
+	RedisSetFailed string = "Redis Set 操作失敗"
 )

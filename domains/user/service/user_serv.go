@@ -4,7 +4,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"self_go_gin/common/msgid"
@@ -12,14 +11,16 @@ import (
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/domains/user/entity"
-	apperror "self_go_gin/internal/apperror"
 
 	"self_go_gin/domains/user/events"
 	"self_go_gin/domains/user/repository"
 	"self_go_gin/gin_application/api/v1/user/request"
+	"self_go_gin/gin_application/handler"
 	"self_go_gin/infra/event"
+	apperror "self_go_gin/internal/apperror"
 	jwtsecret "self_go_gin/util/jwt_secret"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -34,7 +35,12 @@ type UserService struct {
 func NewUserService() (*UserService, error) {
 	repo, err := repository.NewUserRepository()
 	if err != nil {
-		return nil, fmt.Errorf("UserService NewUserService(): %w", err)
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.InitFailed,
+			err,
+			apperror.WithLayer("UserService NewUserService()"),
+		)
 	}
 	app := container.GetContainer()
 	if app.GetConfig().IsEventBroker {
@@ -57,9 +63,12 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.InvalidInput,
-			appmsg.UserAccountFormatInvalid,
-			fmt.Errorf("invalid account format: %w", err),
-			nil,
+			appmsg.AccountFormatInvalid,
+			err,
+			apperror.WithLayer("UserService CreateUser() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": req.Account,
+			}),
 		)
 	}
 
@@ -68,11 +77,37 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.InvalidInput,
-			appmsg.UserPasswordInvalidOrWeak,
-			fmt.Errorf("invalid password: %w", err),
-			map[string]interface{}{
-				"password":req.Password,
-			},
+			appmsg.PasswordInvalidOrWeak,
+			err,
+			apperror.WithLayer("UserService CreateUser() NewPasswordFromPlainText()"),
+		)
+	}
+
+	app := container.GetContainer()
+	rdb := app.GetRedisClient()
+
+	exist, err := rdb.Get(context.Background(), "user:exists:"+req.Account).Result()
+	if err != nil && err != redis.Nil {
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.InitFailed,
+			err,
+			apperror.WithLayer("UserService CreateUser() Check Redis"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": req.Account,
+			}),
+		)
+	}
+	// 表示 redis 內帳號已存在
+	if exist != "" {
+		return nil, apperror.NewAppError(
+			msgid.ResourceExist,
+			appmsg.CheckAccountExistFailed,
+			handler.ErrResourceExist,
+			apperror.WithLayer("UserService CreateUser() redis get()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": req.Account,
+			}),
 		)
 	}
 
@@ -81,18 +116,24 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.UserCheckAccountExistFailed,
-			fmt.Errorf("check account existence failed: %w", err),
-			nil,
+			appmsg.CheckAccountExistFailed,
+			err,
+			apperror.WithLayer("UserService CreateUser() GetUsersByAccount()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": req.Account,
+			}),
 		)
 	}
 	if err == nil {
 		// 帳號已存在
 		return nil, apperror.NewAppError(
 			msgid.ResourceExist,
-			appmsg.UserAccountAlreadyExists,
-			fmt.Errorf("account already exists"),
-			nil,
+			appmsg.AccountAlreadyExists,
+			handler.ErrResourceExist,
+			apperror.WithLayer("UserService CreateUser() GetUsersByAccount() ResourceExist"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": req.Account,
+			}),
 		)
 	}
 
@@ -104,11 +145,12 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.UserCreateFailed,
-			fmt.Errorf("create user failed: %w", err),
-			map[string]interface{}{
-				"user":user,
-			},
+			appmsg.CreateFailed,
+			err,
+			apperror.WithLayer("UserService CreateUser() CreateUser()"),
+			apperror.WithLogData(map[string]interface{}{
+				"user": user,
+			}),
 		)
 	}
 
@@ -130,11 +172,12 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.InvalidInput,
-			appmsg.UserAccountFormatInvalid,
-			fmt.Errorf("invalid account format: %w", err),
-			map[string]interface{}{
+			appmsg.AccountFormatInvalid,
+			err,
+			apperror.WithLayer("UserService CheckLogin() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": req.Account,
-			},
+			}),
 		)
 	}
 
@@ -144,20 +187,22 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.NewAppError(
 				msgid.NoContent,
-				appmsg.UserNotFound,
-				fmt.Errorf("user not found"),
-				map[string]interface{}{
-					"user":user,
-				},
+				appmsg.RecordNotFound,
+				handler.ErrRecordNotFound,
+				apperror.WithLayer("UserService CheckLogin() GetUsersByAccount() RecordNotFound"),
+				apperror.WithLogData(map[string]interface{}{
+					"account": account.Value(),
+				}),
 			)
 		}
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.UserQueryFailed,
-			fmt.Errorf("get user failed: %w", err),
-			map[string]interface{}{
-				"user":user,
-			},
+			appmsg.QueryFailed,
+			err,
+			apperror.WithLayer("UserService CheckLogin() GetUsersByAccount()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": account.Value(),
+			}),
 		)
 	}
 
@@ -165,9 +210,9 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	if !user.VerifyPassword(req.Password) {
 		return nil, apperror.NewAppError(
 			msgid.InvalidInput,
-			appmsg.UserPasswordIncorrect,
-			fmt.Errorf("password incorrect"),
-			nil,
+			appmsg.PasswordIncorrect,
+			handler.ErrPasswordIncorrect,
+			apperror.WithLayer("UserService CheckLogin() VerifyPassword()"),
 		)
 	}
 
@@ -176,9 +221,9 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.UserTokenGenerateFailed,
-			fmt.Errorf("generate token failed: %w", err),
-			nil,
+			appmsg.TokenGenerateFailed,
+			err,
+			apperror.WithLayer("UserService CheckLogin() GenerateToken()"),
 		)
 	}
 
@@ -195,13 +240,23 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 
 	evt, err := event.NewEvent(events.UserCreatedEventType, payload)
 	if err != nil {
-		return fmt.Errorf("failed to create event: %w", err)
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPublishFailed,
+			err,
+			apperror.WithLayer("UserService publishUserCreatedEvent() NewEvent()"),
+		)
 	}
 
 	evt.Source = "user-service"
 
 	if err := s.publisher.Publish(ctx, evt); err != nil {
-		return fmt.Errorf("failed to publish event: %w", err)
+		return apperror.NewAppError(
+			msgid.Fail,
+			"failed to publish event",
+			err,
+			apperror.WithLayer("UserService publishUserCreatedEvent() Publish()"),
+		)
 	}
 
 	zap.S().Infof("User created event published successfully for UserID: %d, Account: %s", user.ID, user.GetAccount())

@@ -2,12 +2,12 @@
 package repository
 
 import (
-	"fmt"
 	"self_go_gin/common/msgid"
 
 	"self_go_gin/domains/admin/entity"
 	"self_go_gin/domains/admin/repository/dao"
 	"self_go_gin/domains/admin/repository/model"
+	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	apperror "self_go_gin/internal/apperror"
 
@@ -31,9 +31,9 @@ func NewAdminRepository() (AdminRepository, error) {
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"初始化管理員倉庫失敗",
-			fmt.Errorf("AdminRepository NewAdminRepository() : %w", err),
-			nil,
+			appmsg.InitFailed,
+			err,
+			apperror.WithLayer("AdminRepository NewAdminRepository()"),
 		)
 	}
 
@@ -53,11 +53,12 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*entity.Admin, 
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"查詢管理員失敗",
-			fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() account: %s, error: %w", account, err),
-			map[string]interface{}{
+			appmsg.QueryFailed,
+			err,
+			apperror.WithLayer("AdminRepositoryImpl GetAdminByAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": account,
-			},
+			}),
 		)
 	}
 
@@ -66,11 +67,12 @@ func (r *adminRepositoryImpl) GetAdminByAccount(account string) (*entity.Admin, 
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"管理員數據轉換失敗",
-			fmt.Errorf("AdminRepositoryImpl GetAdminByAccount() convert PO to domain failed: %w", err),
-			map[string]interface{}{
+			appmsg.DataConversionFailed,
+			err,
+			apperror.WithLayer("AdminRepositoryImpl GetAdminByAccount() modelToDomain()"),
+			apperror.WithLogData(map[string]interface{}{
 				"adminPO": adminPO,
-			},
+			}),
 		)
 	}
 
@@ -87,11 +89,12 @@ func (r *adminRepositoryImpl) CreateAdmin(newAdmin *entity.Admin) (*entity.Admin
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"建立管理員失敗",
-			fmt.Errorf("AdminRepositoryImpl CreateAdmin() error: %w", err),
-			map[string]interface{}{
+			appmsg.CreateFailed,
+			err,
+			apperror.WithLayer("AdminRepositoryImpl CreateAdmin() Create()"),
+			apperror.WithLogData(map[string]interface{}{
 				"adminPO": adminPO,
-			},
+			}),
 		)
 	}
 
@@ -100,11 +103,12 @@ func (r *adminRepositoryImpl) CreateAdmin(newAdmin *entity.Admin) (*entity.Admin
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"管理員數據轉換失敗",
-			fmt.Errorf("AdminRepositoryImpl CreateAdmin() convert PO to domain failed: %w", err),
-			map[string]interface{}{
+			appmsg.DataConversionFailed,
+			err,
+			apperror.WithLayer("AdminRepositoryImpl CreateAdmin() modelToDomain()"),
+			apperror.WithLogData(map[string]interface{}{
 				"createdPO": createdPO,
-			},
+			}),
 		)
 	}
 
@@ -130,11 +134,12 @@ func (r *adminRepositoryImpl) modelToDomain(po *model.Admin) (*entity.Admin, err
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
 		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"管理員數據損壞",
-			fmt.Errorf("invalid account in database: %w", err),
-			map[string]interface{}{
+			appmsg.AccountFormatInvalid,
+			err,
+			apperror.WithLayer("AdminRepositoryImpl modelToDomain() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": po.Account,
-			},
+			}),
 		)
 	}
 

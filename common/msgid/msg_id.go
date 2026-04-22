@@ -23,4 +23,6 @@ const (
 	ResourceExist
 	// InvalidInput 輸入驗證失敗（帳號格式、密碼強度等）
 	InvalidInput
+	// NotAppError 非 AppError 包裝過的錯誤
+	NotAppError
 )

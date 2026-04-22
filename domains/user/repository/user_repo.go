@@ -2,17 +2,19 @@
 package repository
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"self_go_gin/common/msgid"
+	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	apperror "self_go_gin/internal/apperror"
+	"time"
 
 	"self_go_gin/domains/user/entity"
 	"self_go_gin/domains/user/repository/dao"
 	"self_go_gin/domains/user/repository/model"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -32,13 +34,11 @@ type userRepositoryImpl struct {
 func NewUserRepository() (UserRepository, error) {
 	dao, err := dao.NewUserDao()
 	if err != nil {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.RepositoryInitFailed,
-			fmt.Errorf("UserRepository NewUserRepository(): %w", err),
-			map[string]interface{}{
-				"operation": "NewUserRepository",
-			},
+			appmsg.InitFailed,
+			err,
+			apperror.WithLayer("UserRepository NewUserRepository()"),
 		)
 	}
 	return &userRepositoryImpl{
@@ -54,35 +54,42 @@ func (r *userRepositoryImpl) GetDB() *gorm.DB {
 func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
 	userModel, err := r.dao.GetUsersByAccount(account)
 	if err != nil {
-		// 記錄不存在不是錯誤，直接返回
-		if err == gorm.ErrRecordNotFound {
-			return nil, err
-		}
-		// 檢查是否是 AppError（來自 DAO 層的真正錯誤）
-		var appErr *apperror.AppError
-		if errors.As(err, &appErr) {
-			return nil, err // 直接返回 DAO 層的 AppError
-		}
-		// 其他未知錯誤
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.RepositoryQueryFailed,
-			fmt.Errorf("UserRepositoryImpl GetUsersByAccount() account: %s, error: %w", account, err),
-			map[string]interface{}{
+			appmsg.QueryFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() GetUsersByAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": account,
-			},
+			}),
 		)
 	}
 
 	user, err := r.modelToDomain(userModel)
 	if err != nil {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.RepositoryDataConversionFailed,
-			fmt.Errorf("UserRepositoryImpl GetUsersByAccount() convert PO to domain failed: %w", err),
-			map[string]interface{}{
+			appmsg.DataConversionFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() modelToDomain()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": account,
-			},
+			}),
+		)
+	}
+
+	app := container.GetContainer()
+	rdb := app.GetRedisClient()
+	_, err = rdb.SetNX(context.Background(), "user:exists:"+account, 1, 10*time.Minute).Result()
+	if err != nil && err != redis.Nil {
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.RedisSetFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() SetNX()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": account,
+			}),
 		)
 	}
 
@@ -95,25 +102,42 @@ func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, err
 	// 儲存到資料庫
 	createdPO, err := r.dao.Create(userModel)
 	if err != nil {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			appmsg.RepositoryCreateFailed,
-			fmt.Errorf("UserRepositoryImpl CreateUser() error: %w", err),
-			map[string]interface{}{
+			appmsg.CreateFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl CreateUser() Create()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": newUser.GetAccount(),
-			},
+			}),
 		)
 	}
 
 	user, err := r.modelToDomain(createdPO)
 	if err != nil {
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"用戶數據轉換失敗",
-			fmt.Errorf("UserRepositoryImpl CreateUser() convert PO to domain failed: %w", err),
-			map[string]interface{}{
+			appmsg.DataConversionFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl CreateUser() modelToDomain()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account": newUser.GetAccount(),
-			},
+			}),
+		)
+	}
+
+	app := container.GetContainer()
+	redis := app.GetRedisClient()
+	_, err = redis.SetNX(context.Background(), "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
+	if err != nil {
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.CreateFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl CreateUser() SetNX()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": newUser.GetAccount(),
+			}),
 		)
 	}
 
@@ -137,14 +161,14 @@ func (r *userRepositoryImpl) modelToDomain(model *model.User) (*entity.User, err
 	account, err := valueobj.NewAccount(model.Account)
 	if err != nil {
 		// 資料庫中的資料應該是有效的，如果出錯可能是資料損壞
-		return nil, apperror.NewAppErrorWithLogData(
+		return nil, apperror.NewAppError(
 			msgid.Fail,
-			"用戶數據損壞",
-			fmt.Errorf("invalid account in database: %w", err),
-			map[string]interface{}{
+			appmsg.DataConversionFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl modelToDomain() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
 				"account_from_db": model.Account,
-				"user_id":         model.ID,
-			},
+			}),
 		)
 	}
 
