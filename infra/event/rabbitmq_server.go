@@ -66,7 +66,7 @@ func InitRabbitMQServer(serverConfig *env.ServerConfig) (*RabbitMQServer, error)
 	exchangeName := serverConfig.RabbitMQ.Exchange
 	err = channel.ExchangeDeclare(
 		exchangeName, // name
-		"direct",      // type
+		"direct",     // type
 		true,         // durable
 		false,        // auto-deleted
 		false,        // internal
@@ -112,12 +112,12 @@ func (s *RabbitMQServer) Subscribe(handler Handler) error {
 
 	// 聲明隊列
 	queue, err := s.channel.QueueDeclare(
-		eventType,      // 队列名称
-		true,           // 是否持久化
-		false,          // 是否自动删除
-		false,          // 是否为排他性队列
-		true,          // 是否等待服务器返回响应
-		amqp091.Table{  // 额外参数
+		eventType, // 队列名称
+		true,      // 是否持久化
+		false,     // 是否自动删除
+		false,     // 是否为排他性队列
+		true,      // 是否等待服务器返回响应
+		amqp091.Table{ // 额外参数
 			"x-max-priority": int32(10), // 啟用優先級隊列
 		},
 	)
@@ -127,11 +127,11 @@ func (s *RabbitMQServer) Subscribe(handler Handler) error {
 
 	// 綁定隊列到交換機
 	err = s.channel.QueueBind(
-		queue.Name,   // queue name
-		eventType,    // routing key
-		s.exchange,   // exchange name
-		false,        // no-wait
-		nil,          // arguments
+		queue.Name, // queue name
+		eventType,  // routing key
+		s.exchange, // exchange name
+		false,      // no-wait
+		nil,        // arguments
 	)
 	if err != nil {
 		return fmt.Errorf("failed to bind queue for event type %s: %w", eventType, err)

@@ -38,7 +38,6 @@ func InitRabbitMQClient(serverConfig *env.ServerConfig) (*RabbitMQClient, error)
 		serverConfig.RabbitMQ.VHost,
 	)
 
-
 	// 建立連接
 	conn, err := amqp091.Dial(rabbitmqURL)
 	if err != nil {
@@ -55,13 +54,13 @@ func InitRabbitMQClient(serverConfig *env.ServerConfig) (*RabbitMQClient, error)
 	// 聲明交換機
 	exchangeName := serverConfig.RabbitMQ.Exchange
 	err = channel.ExchangeDeclare(
-		exchangeName,         // name
-		"direct",              // type
-		true,                 // durable
-		false,                // auto-deleted
-		false,                // internal
-		false,                // no-wait
-		nil,                  // arguments
+		exchangeName, // name
+		"direct",     // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
 	)
 	if err != nil {
 		channel.Close()
@@ -92,9 +91,9 @@ func GetRabbitMQClient() *RabbitMQClient {
 // Publish 發布事件到默認隊列
 func (c *RabbitMQClient) Publish(ctx context.Context, event *Event) error {
 	opts := &PublishOptions{
-		Queue:    DefaultQueue,
-		MaxRetry: 3,
-		Priority: 5,
+		Queue:      DefaultQueue,
+		MaxRetry:   3,
+		Priority:   5,
 		RoutingKey: event.Type, // 使用事件類型作為路由鍵
 	}
 	return c.PublishWithOptions(ctx, event, opts)
@@ -104,9 +103,9 @@ func (c *RabbitMQClient) Publish(ctx context.Context, event *Event) error {
 func (c *RabbitMQClient) PublishWithOptions(ctx context.Context, event *Event, opts *PublishOptions) error {
 	if opts == nil {
 		opts = &PublishOptions{
-			Queue:    DefaultQueue,
-			MaxRetry: 3,
-			Priority: 5,
+			Queue:      DefaultQueue,
+			MaxRetry:   3,
+			Priority:   5,
 			RoutingKey: DefaultQueue, // 默認使用隊列名稱作為路由鍵
 		}
 	}
@@ -134,10 +133,10 @@ func (c *RabbitMQClient) PublishWithOptions(ctx context.Context, event *Event, o
 	// 發布消息
 	err = c.channel.PublishWithContext(
 		ctx,
-		c.exchange, // exchange
+		c.exchange,      // exchange
 		opts.RoutingKey, // routing key
-		false,      // mandatory
-		false,      // immediate
+		false,           // mandatory
+		false,           // immediate
 		publishing,
 	)
 	if err != nil {

@@ -37,7 +37,6 @@ const (
 	AdminEventPayloadParseFailed string = "事件數據解析失敗"
 )
 
-
 // ===== Redis Messages =====
 //
 //nolint:gosec
