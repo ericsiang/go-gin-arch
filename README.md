@@ -106,16 +106,18 @@
 │       └── gorm_mysql
 │           └── mysql.go
 ├── internal                    => 放置內部使用的程式碼，例如通用的 dao、model 等
+│   ├── apperror
+│   │   └── app_error.go        => 錯誤處理結構和相關函數
 │   ├── dao
-│   │   └── generic_dao.go
+│   │   └── generic_gorm_dao.go => 提供通用資料存取功能，使用 GORM 作為 ORM 工具
 │   └── model
-│       ├── gormModel.go
-│       └── model_setting.go
+│       └── gormModel.go        => 定義了 GORM 模型的基礎結構，供其他模型繼承使用
 ├── log                         => 置放 log 檔，可依需求將 log level 區分
 │   ├── error
 │   └── info
 ├── scripts                     => 各式腳本用資料夾
-│   └── docker                  => docker 建立容器的腳本
+│   ├── docker                  => docker 建立容器的腳本
+│   └── wrk                     => wrk 壓測用 lua 腳本
 ├── test                        => 放置測試用的程式碼
 │   └── limit_ping_test.go
 ├── tree.md
@@ -135,9 +137,6 @@
     │   └── rbac_test.rego
     ├── swagger_docs            => swagger docs 使用
     │   └── swag_params.go
-    ├── track_time              => 計算 func 程式時間
-    │   ├── track_time.go
-    │   └── track_time_test.go
     └── zap_logger              => zap plugin
         ├── zapLoggger_test.go
         └── zap_logger.go   
