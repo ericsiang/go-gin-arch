@@ -6,6 +6,7 @@ import (
 	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
+	"self_go_gin/gin_application/handler"
 	apperror "self_go_gin/internal/apperror"
 	"time"
 
@@ -51,6 +52,34 @@ func (r *userRepositoryImpl) GetDB() *gorm.DB {
 
 // GetUsersByAccount 根據帳號查詢用戶
 func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
+	// 先確認緩存
+	app := container.GetContainer()
+	rdb := app.GetRedisClient()
+	exist, err := rdb.Get(app.GetRedisCtx(), "user:exists:"+account).Result()
+	if err != nil && err != redis.Nil {
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.InitFailed,
+			err,
+			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() Check Redis"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": account,
+			}),
+		)
+	}
+	// 表示 redis 內帳號已存在
+	if exist != "" {
+		return nil, apperror.NewAppError(
+			msgid.ResourceExist,
+			appmsg.CheckAccountExistFailed,
+			handler.ErrResourceExist,
+			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() redis get()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": account,
+			}),
+		)
+	}
+
 	userModel, err := r.dao.GetUsersByAccount(account)
 	if err != nil {
 		return nil, apperror.NewAppError(
@@ -77,8 +106,6 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 		)
 	}
 
-	app := container.GetContainer()
-	rdb := app.GetRedisClient()
 	_, err = rdb.SetNX(app.GetRedisCtx(), "user:exists:"+account, 1, 10*time.Minute).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(

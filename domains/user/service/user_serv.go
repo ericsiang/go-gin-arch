@@ -20,7 +20,6 @@ import (
 	apperror "self_go_gin/internal/apperror"
 	jwtsecret "self_go_gin/util/jwt_secret"
 
-	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -83,33 +82,6 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 		)
 	}
 
-	app := container.GetContainer()
-	rdb := app.GetRedisClient()
-
-	exist, err := rdb.Get(context.Background(), "user:exists:"+req.Account).Result()
-	if err != nil && err != redis.Nil {
-		return nil, apperror.NewAppError(
-			msgid.Fail,
-			appmsg.InitFailed,
-			err,
-			apperror.WithLayer("UserService CreateUser() Check Redis"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
-			}),
-		)
-	}
-	// 表示 redis 內帳號已存在
-	if exist != "" {
-		return nil, apperror.NewAppError(
-			msgid.ResourceExist,
-			appmsg.CheckAccountExistFailed,
-			handler.ErrResourceExist,
-			apperror.WithLayer("UserService CreateUser() redis get()"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
-			}),
-		)
-	}
 
 	// 檢查帳號是否已存在
 	_, err = s.repo.GetUsersByAccount(req.Account)
