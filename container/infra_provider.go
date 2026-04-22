@@ -2,6 +2,7 @@
 package container
 
 import (
+	"context"
 	"fmt"
 
 	goredis "self_go_gin/infra/cache/redis"
@@ -28,14 +29,14 @@ func InitMysql(config *env.ServerConfig) (database.Database, error) {
 }
 
 // InitRedis 初始化 Redis 连接
-func InitRedis(config *env.ServerConfig) (*redis.Client, error) {
-	redisClient, err := goredis.InitRedis(config)
+func InitRedis(config *env.ServerConfig) (*redis.Client, context.Context, error) {
+	redisClient, ctx, err := goredis.InitRedis(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to init redis: %w", err)
+		return nil, nil, fmt.Errorf("failed to init redis: %w", err)
 	}
 	// 根据您的 redis 包实现，可能需要调整返回类型
 	fmt.Println("Redis initialized")
-	return redisClient, nil
+	return redisClient, ctx, nil
 }
 
 // InitEventBroker 初始化事件代理

@@ -21,6 +21,7 @@ type AppContainer struct {
 	config *env.ServerConfig
 	// 基础设施
 	mysqlDB     database.Database
+	redisCtx    context.Context
 	redisClient *redis.Client
 	eventBroker *event.Broker
 	// 其他通用实例可以在此添加
@@ -85,7 +86,7 @@ func (c *AppContainer) InitInfrastructure() error {
 
 	// 初始化 Redis
 	if c.config.Redis.IsEnabled {
-		redisClient, err := InitRedis(c.config)
+		redisClient, redisCtx, err := InitRedis(c.config)
 		if err != nil {
 			return fmt.Errorf("failed to init redis: %w", err)
 		}
@@ -93,6 +94,7 @@ func (c *AppContainer) InitInfrastructure() error {
 			return fmt.Errorf("redis client instance is nil")
 		}
 		c.redisClient = redisClient
+		c.redisCtx = redisCtx
 	} else {
 		fmt.Println("Redis is not enabled by env")
 	}
@@ -170,6 +172,13 @@ func (c *AppContainer) GetRedisClient() *redis.Client {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.redisClient
+}
+
+// GetRedisCtx 获取 Redis 上下文实例
+func (c *AppContainer) GetRedisCtx() context.Context {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.redisCtx
 }
 
 // GetEventBroker 获取事件代理实例

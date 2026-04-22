@@ -2,7 +2,6 @@
 package repository
 
 import (
-	"context"
 	"self_go_gin/common/msgid"
 	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
@@ -80,7 +79,7 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 
 	app := container.GetContainer()
 	rdb := app.GetRedisClient()
-	_, err = rdb.SetNX(context.Background(), "user:exists:"+account, 1, 10*time.Minute).Result()
+	_, err = rdb.SetNX(app.GetRedisCtx(), "user:exists:"+account, 1, 10*time.Minute).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -127,8 +126,8 @@ func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, err
 	}
 
 	app := container.GetContainer()
-	redis := app.GetRedisClient()
-	_, err = redis.SetNX(context.Background(), "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
+	rdb := app.GetRedisClient()
+	_, err = rdb.SetNX(app.GetRedisCtx(), "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,

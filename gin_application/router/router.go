@@ -51,7 +51,6 @@ func Router() *gin.Engine {
 	setDefaultMiddlewares(router)
 	registerSwagger(router)
 	apiV1Group := router.Group("/api/v1")
-	router.POST("createUser", v1_user.CreateUser)
 	setNoAuthRoutes(apiV1Group)
 	setAuthRoutes(apiV1Group)
 	return router
@@ -94,6 +93,8 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 		}
 	})
 	Login(apiV1UsersGroup, apiV1AdminsGroup)
+	apiV1UsersGroup.POST("createUser", v1_user.CreateUser)
+
 }
 
 func setAuthRoutes(apiV1Group *gin.RouterGroup) {

@@ -12,7 +12,7 @@ import (
 )
 
 // InitRedis 初始化 Redis 客戶端
-func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, error) {
+func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, context.Context, error) {
 	redisConfig := serverEnv.Redis
 	redisAddr := redisConfig.Host + ":" + strconv.Itoa(redisConfig.Port)
 	redisClient := redis.NewClient(&redis.Options{
@@ -24,10 +24,10 @@ func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, error) {
 	ctx := context.Background()
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "redis connect failed, err:", err)
-		return nil, err
+		return nil, nil, err
 	}
 
 	fmt.Println("redis client connect ping success")
 
-	return redisClient, nil
+	return redisClient, ctx, nil
 }
