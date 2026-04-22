@@ -46,7 +46,10 @@ func InitRabbitMQServer(serverConfig *env.ServerConfig) (*RabbitMQServer, error)
 	// 建立通道
 	channel, err := conn.Channel()
 	if err != nil {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close connection after channel error: %w", err)
+		}
 		return nil, fmt.Errorf("failed to open channel: %w", err)
 	}
 
@@ -57,8 +60,14 @@ func InitRabbitMQServer(serverConfig *env.ServerConfig) (*RabbitMQServer, error)
 		false, // global
 	)
 	if err != nil {
-		channel.Close()
-		conn.Close()
+		err := channel.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close channel after QoS error: %w", err)
+		}
+		err = conn.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close connection after QoS error: %w", err)
+		}
 		return nil, fmt.Errorf("failed to set QoS: %w", err)
 	}
 
@@ -74,8 +83,14 @@ func InitRabbitMQServer(serverConfig *env.ServerConfig) (*RabbitMQServer, error)
 		nil,          // arguments
 	)
 	if err != nil {
-		channel.Close()
-		conn.Close()
+		err := channel.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close channel after exchange declare error: %w", err)
+		}
+		err = conn.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close connection after exchange declare error: %w", err)
+		}
 		return nil, fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
@@ -168,7 +183,10 @@ func (s *RabbitMQServer) handleMessages(eventType string, deliveries <-chan amqp
 		if err := json.Unmarshal(delivery.Body, &event); err != nil {
 			zap.S().Error("Failed to unmarshal event", zap.String("event_type", eventType), zap.Error(err))
 			// 拒絕消息，不重新入隊
-			delivery.Nack(false, false)
+			err := delivery.Nack(false, false)
+			if err != nil {
+				zap.S().Error("Failed to nack message", zap.String("event_type", eventType), zap.Error(err))
+			}
 			continue
 		}
 
@@ -179,10 +197,16 @@ func (s *RabbitMQServer) handleMessages(eventType string, deliveries <-chan amqp
 		if err := handler.Handle(ctx, &event); err != nil {
 			zap.S().Error("Error processing event", zap.String("event_type", eventType), zap.Error(err))
 			// 拒絕消息，重新入隊
-			delivery.Nack(false, true)
+			err = delivery.Nack(false, true)
+			if err != nil {
+				zap.S().Error("Failed to nack message", zap.String("event_type", eventType), zap.Error(err))
+			}
 		} else {
 			// 確認消息
-			delivery.Ack(false)
+			err := delivery.Ack(false)
+			if err != nil {
+				zap.S().Error("Failed to ack message", zap.String("event_type", eventType), zap.Error(err))
+			}
 		}
 	}
 
@@ -252,6 +276,8 @@ func (s *RabbitMQServer) Shutdown(ctx context.Context) error {
 	// 發送關閉信號
 	select {
 	case s.closeSignal <- true:
+	case <-ctx.Done():
+		return fmt.Errorf("shutdown timed out: %w", ctx.Err())
 	default:
 	}
 

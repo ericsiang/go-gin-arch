@@ -47,7 +47,10 @@ func InitRabbitMQClient(serverConfig *env.ServerConfig) (*RabbitMQClient, error)
 	// 建立通道
 	channel, err := conn.Channel()
 	if err != nil {
-		conn.Close()
+		err := conn.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close connection after channel error: %w", err)
+		}
 		return nil, fmt.Errorf("failed to open channel: %w", err)
 	}
 
@@ -63,8 +66,14 @@ func InitRabbitMQClient(serverConfig *env.ServerConfig) (*RabbitMQClient, error)
 		nil,          // arguments
 	)
 	if err != nil {
-		channel.Close()
-		conn.Close()
+		err := channel.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close channel after exchange declare error: %w", err)
+		}
+		err = conn.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to close connection after exchange declare error: %w", err)
+		}
 		return nil, fmt.Errorf("failed to declare exchange: %w", err)
 	}
 
@@ -117,7 +126,7 @@ func (c *RabbitMQClient) PublishWithOptions(ctx context.Context, event *Event, o
 
 	// 設置發布參數
 	headers := amqp091.Table{
-		"x-max-priority": int32(opts.Priority),
+		"x-max-priority": opts.Priority,  // 設置消息優先級
 		"x-max-length":   int32(1000000), // 隊列最大消息數
 	}
 

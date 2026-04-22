@@ -19,7 +19,7 @@ type RotatelogsConfig struct {
 	InfoLogPath   string
 	ErrorLogPath  string
 	MaxSize       int64
-	RotationCount int64
+	RotationCount uint
 	MaxAge        time.Duration
 	RotationTime  time.Duration
 }
