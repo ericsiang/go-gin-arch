@@ -10,13 +10,10 @@ import (
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	apperror "self_go_gin/internal/apperror"
-
-	"gorm.io/gorm"
 )
 
 // AdminRepository 管理員帳號密碼表接口
 type AdminRepository interface {
-	GetDB() *gorm.DB
 	GetAdminByAccount(account string) (*entity.Admin, error)
 	CreateAdmin(newAdmin *entity.Admin) (*entity.Admin, error)
 }
@@ -40,10 +37,6 @@ func NewAdminRepository() (AdminRepository, error) {
 	return &adminRepositoryImpl{
 		dao: dao,
 	}, nil
-}
-
-func (r *adminRepositoryImpl) GetDB() *gorm.DB {
-	return r.dao.GetGenericDao().GetDB()
 }
 
 // GetAdminByAccount 根據帳號查詢管理員

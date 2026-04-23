@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
 
 	"self_go_gin/infra/env"
 
@@ -17,6 +19,7 @@ type RabbitMQServer struct {
 	conn        *amqp091.Connection
 	channel     *amqp091.Channel
 	exchange    string
+	mu          sync.RWMutex
 	handlers    map[string]Handler
 	deliveries  map[string]<-chan amqp091.Delivery
 	closeSignal chan bool
@@ -115,6 +118,8 @@ func GetRabbitMQServer() *RabbitMQServer {
 
 // Subscribe 訂閱事件，註冊事件處理器和隊列綁定
 func (s *RabbitMQServer) Subscribe(handler Handler) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	eventType := handler.EventType()
 
 	// 檢查是否已經註冊
@@ -193,7 +198,7 @@ func (s *RabbitMQServer) handleMessages(eventType string, deliveries <-chan amqp
 		fmt.Printf("Processing event from RabbitMQ: type=%s, source=%s\n", event.Type, event.Source)
 
 		// 調用處理器
-		ctx := context.Background()
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second) // 設置處理超時
 		if err := handler.Handle(ctx, &event); err != nil {
 			zap.S().Error("Error processing event", zap.String("event_type", eventType), zap.Error(err))
 			// 拒絕消息，重新入隊
@@ -215,17 +220,22 @@ func (s *RabbitMQServer) handleMessages(eventType string, deliveries <-chan amqp
 
 // Start 啟動事件處理服務器（非阻塞）
 func (s *RabbitMQServer) Start() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.isRunning {
 		return fmt.Errorf("RabbitMQ server is already running")
 	}
-
 	s.isRunning = true
+
 	fmt.Println("Starting RabbitMQ event server...")
 
 	// 監聽連接關閉信號
 	go func() {
 		<-s.conn.NotifyClose(make(chan *amqp091.Error))
+		s.mu.Lock()
 		s.isRunning = false
+		s.mu.Unlock()
 		fmt.Println("RabbitMQ connection closed")
 	}()
 
@@ -234,14 +244,17 @@ func (s *RabbitMQServer) Start() error {
 
 // Run 運行服務器（阻塞方法）
 func (s *RabbitMQServer) Run() error {
+	s.mu.Lock()
 	if s.isRunning {
+		s.mu.Unlock()
 		return fmt.Errorf("RabbitMQ server is already running")
 	}
-
 	s.isRunning = true
+	s.mu.Unlock() // ⚠️ 必須在阻塞操作前解鎖，否則會死鎖
+
 	fmt.Println("Running RabbitMQ event server...")
 
-	// 等待關閉信號
+	// 等待關閉信號（這是阻塞操作，不能持有鎖）
 	<-s.closeSignal
 
 	return nil
@@ -249,14 +262,22 @@ func (s *RabbitMQServer) Run() error {
 
 // Shutdown 優雅關閉服務器
 func (s *RabbitMQServer) Shutdown(ctx context.Context) error {
+	s.mu.Lock()
 	if !s.isRunning {
+		s.mu.Unlock()
 		return fmt.Errorf("RabbitMQ server is not running")
 	}
-
 	s.isRunning = false
 
-	// 關閉所有消費者
+	// 複製 handlers 以避免長時間持有鎖
+	handlersCopy := make([]string, 0, len(s.handlers))
 	for eventType := range s.handlers {
+		handlersCopy = append(handlersCopy, eventType)
+	}
+	s.mu.Unlock()
+
+	// 關閉所有消費者
+	for _, eventType := range handlersCopy {
 		err := s.channel.Cancel(eventType, false)
 		if err != nil {
 			zap.S().Error("Failed to cancel consumer", zap.String("event_type", eventType), zap.Error(err))
@@ -287,5 +308,7 @@ func (s *RabbitMQServer) Shutdown(ctx context.Context) error {
 
 // IsRunning 檢查服務器是否在運行
 func (s *RabbitMQServer) IsRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.isRunning
 }

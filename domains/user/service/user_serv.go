@@ -82,7 +82,6 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 		)
 	}
 
-
 	// 檢查帳號是否已存在
 	_, err = s.repo.GetUsersByAccount(req.Account)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

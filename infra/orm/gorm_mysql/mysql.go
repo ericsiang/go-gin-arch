@@ -58,7 +58,10 @@ func (m *MysqlDB) Connect(serverEnv *env.ServerConfig) error {
 		return fmt.Errorf("mysql connect failed, err: %w", err)
 	}
 
-	sqlDB, _ := db.DB()
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("failed to get mysql db: %w", err)
+	}
 	sqlDB.SetMaxIdleConns(constset.MySQLMaxIdleConns)
 	sqlDB.SetMaxOpenConns(constset.MySQLMaxOpenConns)
 	m.db = db

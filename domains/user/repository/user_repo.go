@@ -2,6 +2,7 @@
 package repository
 
 import (
+	"context"
 	"self_go_gin/common/msgid"
 	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
@@ -15,12 +16,10 @@ import (
 	"self_go_gin/domains/user/repository/model"
 
 	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 // UserRepository 用戶接口
 type UserRepository interface {
-	GetDB() *gorm.DB
 	GetUsersByAccount(account string) (*entity.User, error)
 	CreateUser(newUser *entity.User) (*entity.User, error)
 }
@@ -46,16 +45,14 @@ func NewUserRepository() (UserRepository, error) {
 	}, nil
 }
 
-func (r *userRepositoryImpl) GetDB() *gorm.DB {
-	return r.dao.GetGenericDao().GetDB()
-}
-
 // GetUsersByAccount 根據帳號查詢用戶
 func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
 	// 先確認緩存
 	app := container.GetContainer()
 	rdb := app.GetRedisClient()
-	exist, err := rdb.Get(app.GetRedisCtx(), "user:exists:"+account).Result()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	exist, err := rdb.Get(ctx, "user:exists:"+account).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -106,7 +103,9 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 		)
 	}
 
-	_, err = rdb.SetNX(app.GetRedisCtx(), "user:exists:"+account, 1, 10*time.Minute).Result()
+	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err = rdb.SetNX(ctx, "user:exists:"+account, 1, 10*time.Minute).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -154,7 +153,9 @@ func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, err
 
 	app := container.GetContainer()
 	rdb := app.GetRedisClient()
-	_, err = rdb.SetNX(app.GetRedisCtx(), "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err = rdb.SetNX(ctx, "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
 	if err != nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,

@@ -7,12 +7,13 @@ import (
 	"os"
 	"self_go_gin/infra/env"
 	"strconv"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 // InitRedis 初始化 Redis 客戶端
-func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, context.Context, error) {
+func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, error) {
 	redisConfig := serverEnv.Redis
 	redisAddr := redisConfig.Host + ":" + strconv.Itoa(redisConfig.Port)
 	redisClient := redis.NewClient(&redis.Options{
@@ -21,13 +22,14 @@ func InitRedis(serverEnv *env.ServerConfig) (*redis.Client, context.Context, err
 		DB:       0, // use default DB
 	})
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		fmt.Fprintln(os.Stderr, "redis connect failed, err:", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	fmt.Println("redis client connect ping success")
 
-	return redisClient, ctx, nil
+	return redisClient, nil
 }
