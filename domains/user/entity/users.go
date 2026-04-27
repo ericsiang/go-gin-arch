@@ -23,7 +23,7 @@ func NewUser(account valueobj.Account, password valueobj.Password) *User {
 }
 
 // ReconstructUser 從資料庫重建用戶（用於 Repository 層）
-func ReconstructUser(id uint, account valueobj.Account, password valueobj.Password, gormModel model.GormModel) *User {
+func ReconstructUser(id uint64, account valueobj.Account, password valueobj.Password, gormModel model.GormModel) *User {
 	user := &User{
 		GormModel: gormModel,
 		account:   account,

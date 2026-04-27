@@ -23,8 +23,8 @@ const (
 
 // Claims 用戶聲明
 type Claims struct {
-	UserID  uint `json:"user_id"`
-	AdminID uint `json:"admin_id"`
+	UserID  uint64 `json:"user_id"`
+	AdminID uint64 `json:"admin_id"`
 	jwt.MapClaims
 }
 
@@ -34,7 +34,7 @@ func SetJwtSecret(secret string) {
 }
 
 // GenerateToken 根據用戶的用戶id 生成JWT token
-func GenerateToken(checkLoginRole LoginRole, loginID uint) (string, error) {
+func GenerateToken(checkLoginRole LoginRole, loginID uint64) (string, error) {
 	nowTime := time.Now()
 	expireTime := nowTime.Add(1 * time.Hour)
 	claims := Claims{}

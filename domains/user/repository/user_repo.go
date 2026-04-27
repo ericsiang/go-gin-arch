@@ -3,6 +3,7 @@ package repository
 
 import (
 	"context"
+	"strconv"
 
 	"self_go_gin/common/msgid"
 	"self_go_gin/container"
@@ -16,6 +17,7 @@ import (
 	"self_go_gin/domains/user/entity"
 	"self_go_gin/domains/user/repository/dao"
 	"self_go_gin/domains/user/repository/model"
+	internal_model "self_go_gin/internal/model"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -69,8 +71,8 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 	}
 	// 表示 redis 內帳號已存在
 	if exist != "" {
-		strParts := strings.SplitN(exist, ":", 2)
-		vobjAccount, err := valueobj.NewAccount(strParts[0])
+		strParts := strings.SplitN(exist, ":", 3)
+		vobjAccount, err := valueobj.NewAccount(strParts[1])
 		if err != nil {
 			return nil, apperror.NewAppError(
 				msgid.Fail,
@@ -78,12 +80,24 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 				err,
 				apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() NewAccount() from Redis"),
 				apperror.WithLogData(map[string]interface{}{
-					"account_from_redis": strParts[0],
+					"account_from_redis": strParts[1],
 				}),
 			)
 		}
-		vobjPassword := valueobj.NewPasswordFromHash(strParts[1])
-		return entity.NewUser(vobjAccount, vobjPassword), nil
+		vobjPassword := valueobj.NewPasswordFromHash(strParts[2])
+		u64, err := strconv.ParseUint(strParts[0], 10, 0)
+		if err != nil {
+			return nil, apperror.NewAppError(
+				msgid.Fail,
+				appmsg.DataConversionFailed,
+				err,
+				apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() ParseUint() from Redis"),
+				apperror.WithLogData(map[string]interface{}{
+					"id_from_redis": strParts[0],
+				}),
+			)
+		}
+		return entity.ReconstructUser(u64, vobjAccount, vobjPassword, internal_model.GormModel{}), nil
 	}
 
 	userModel, err := r.dao.GetUsersByAccount(account)
@@ -114,7 +128,7 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	userData := user.GetAccount() + ":" + user.GetPasswordHash()
+	userData := strconv.FormatUint(uint64(user.ID), 10) + ":" + user.GetAccount() + ":" + user.GetPasswordHash()
 	_, err = rdb.SetNX(ctx, "user:exists:"+account, userData, 10*time.Minute).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(

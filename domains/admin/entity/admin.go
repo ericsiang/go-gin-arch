@@ -24,7 +24,7 @@ func NewAdmin(account valueobj.Account, password valueobj.Password) *Admin {
 
 // ReconstructAdmin 從資料庫重建管理員（用於 Repository 層）
 // 包含完整的 GORM 模型資料
-func ReconstructAdmin(id uint, account valueobj.Account, password valueobj.Password, gormModel model.GormModel) *Admin {
+func ReconstructAdmin(id uint64, account valueobj.Account, password valueobj.Password, gormModel model.GormModel) *Admin {
 	admin := &Admin{
 		GormModel: gormModel,
 		account:   account,

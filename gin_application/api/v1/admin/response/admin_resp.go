@@ -3,6 +3,6 @@ package response
 
 // CreateAdminResponse 創建管理員回應
 type CreateAdminResponse struct {
-	AdminID uint   `json:"admin_id"`
+	AdminID uint64 `json:"admin_id"`
 	Account string `json:"account"`
 }

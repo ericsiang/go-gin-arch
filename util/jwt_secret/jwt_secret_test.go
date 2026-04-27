@@ -9,8 +9,8 @@ import (
 
 const (
 	testSecretKey = "test_secret_key_for_jwt_12345"
-	testUserID    = uint(1)
-	testAdminID   = uint(2)
+	testUserID    = 1
+	testAdminID   = 2
 )
 
 // setupTest 測試前置設置
@@ -52,7 +52,7 @@ func TestGenerateToken(t *testing.T) {
 	tests := []struct {
 		name      string
 		role      LoginRole
-		loginID   uint
+		loginID   uint64
 		wantErr   bool
 		errSubstr string
 	}{
@@ -319,7 +319,7 @@ func BenchmarkGenerateToken(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = GenerateToken(LoginUser, uint(i%1000))
+		_, _ = GenerateToken(LoginUser, uint64(i%1000))
 	}
 }
 
@@ -340,7 +340,7 @@ func BenchmarkGenerateAndParse(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		token, _ := GenerateToken(LoginUser, uint(i%1000))
+		token, _ := GenerateToken(LoginUser, uint64(i%1000))
 		_, _ = ParseToken(token)
 	}
 }

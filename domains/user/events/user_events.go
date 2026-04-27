@@ -25,7 +25,7 @@ const (
 
 // UserCreatedEventPayload 用戶創建事件的負載
 type UserCreatedEventPayload struct {
-	UserID   uint   `json:"user_id"`
+	UserID   uint64 `json:"user_id"`
 	Account  string `json:"account"`
 	Email    string `json:"email,omitempty"`
 	CreateAt string `json:"create_at"`
