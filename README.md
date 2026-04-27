@@ -267,7 +267,7 @@ make help  # 查看所有可用命令
 # 測試建立用戶
 wrk -t8 -c100 -d30s -s ./scripts/wrk/create.lua --latency http://localhost:5001
 
-# 測試用戶登入
+# 測試多用戶登入，先跑過測試建立用戶，接著從資料庫只搜尋 account 欄位資料，複製修改到 ./scripts/wrk/login_account.txt
 wrk -t8 -c100 -d30s -s ./scripts/wrk/login.lua --latency http://localhost:5001
 
 # 測試帶 Token 請求
