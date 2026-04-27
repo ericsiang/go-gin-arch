@@ -3,12 +3,14 @@ package repository
 
 import (
 	"context"
+
 	"self_go_gin/common/msgid"
 	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
-	"self_go_gin/gin_application/handler"
 	apperror "self_go_gin/internal/apperror"
+	"strings"
+
 	"time"
 
 	"self_go_gin/domains/user/entity"
@@ -26,7 +28,7 @@ type UserRepository interface {
 
 // userRepositoryImpl 用戶倉庫實現
 type userRepositoryImpl struct {
-	dao dao.UserDaoInterface
+	dao       dao.UserDaoInterface
 	rdbCachee *redis.Client
 }
 
@@ -42,7 +44,7 @@ func NewUserRepository() (UserRepository, error) {
 		)
 	}
 	return &userRepositoryImpl{
-		dao: dao,
+		dao:       dao,
 		rdbCachee: container.GetContainer().GetRedisClient(),
 	}, nil
 }
@@ -67,15 +69,21 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 	}
 	// 表示 redis 內帳號已存在
 	if exist != "" {
-		return nil, apperror.NewAppError(
-			msgid.ResourceExist,
-			appmsg.CheckAccountExistFailed,
-			handler.ErrResourceExist,
-			apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() redis get()"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": account,
-			}),
-		)
+		strParts := strings.SplitN(exist, ":", 2)
+		vobjAccount, err := valueobj.NewAccount(strParts[0])
+		if err != nil {
+			return nil, apperror.NewAppError(
+				msgid.Fail,
+				appmsg.DataConversionFailed,
+				err,
+				apperror.WithLayer("UserRepositoryImpl GetUsersByAccount() NewAccount() from Redis"),
+				apperror.WithLogData(map[string]interface{}{
+					"account_from_redis": strParts[0],
+				}),
+			)
+		}
+		vobjPassword := valueobj.NewPasswordFromHash(strParts[1])
+		return entity.NewUser(vobjAccount, vobjPassword), nil
 	}
 
 	userModel, err := r.dao.GetUsersByAccount(account)
@@ -106,7 +114,8 @@ func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, er
 
 	ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_, err = rdb.SetNX(ctx, "user:exists:"+account, 1, 10*time.Minute).Result()
+	userData := user.GetAccount() + ":" + user.GetPasswordHash()
+	_, err = rdb.SetNX(ctx, "user:exists:"+account, userData, 10*time.Minute).Result()
 	if err != nil && err != redis.Nil {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -146,23 +155,6 @@ func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, err
 			appmsg.DataConversionFailed,
 			err,
 			apperror.WithLayer("UserRepositoryImpl CreateUser() modelToDomain()"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": newUser.GetAccount(),
-			}),
-		)
-	}
-
-
-	rdb := r.rdbCachee
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	_, err = rdb.SetNX(ctx, "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()
-	if err != nil {
-		return nil, apperror.NewAppError(
-			msgid.Fail,
-			appmsg.CreateFailed,
-			err,
-			apperror.WithLayer("UserRepositoryImpl CreateUser() SetNX()"),
 			apperror.WithLogData(map[string]interface{}{
 				"account": newUser.GetAccount(),
 			}),

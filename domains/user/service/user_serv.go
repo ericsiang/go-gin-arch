@@ -14,7 +14,6 @@ import (
 
 	"self_go_gin/domains/user/events"
 	"self_go_gin/domains/user/repository"
-	"self_go_gin/gin_application/api/v1/user/request"
 	"self_go_gin/gin_application/handler"
 	"self_go_gin/infra/event"
 	apperror "self_go_gin/internal/apperror"
@@ -59,7 +58,7 @@ func NewUserService() (*UserService, error) {
 func (s *UserService) CreateUser(ctx context.Context, account valueobj.Account, password valueobj.Password) (*entity.User, error) {
 
 	// 檢查帳號是否已存在
-	_, err := s.repo.GetUsersByAccount(account.Value())
+	exist, err := s.repo.GetUsersByAccount(account.Value())
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -71,7 +70,7 @@ func (s *UserService) CreateUser(ctx context.Context, account valueobj.Account, 
 			}),
 		)
 	}
-	if err == nil {
+	if exist != nil {
 		// 帳號已存在
 		return nil, apperror.NewAppError(
 			msgid.ResourceExist,
@@ -85,8 +84,7 @@ func (s *UserService) CreateUser(ctx context.Context, account valueobj.Account, 
 	}
 
 	// 創建聚合根
-	user  := entity.NewUser(account, password)
-
+	user := entity.NewUser(account, password)
 
 	// 儲存到資料庫
 	createdUser, err := s.repo.CreateUser(user)
@@ -114,21 +112,7 @@ func (s *UserService) CreateUser(ctx context.Context, account valueobj.Account, 
 }
 
 // CheckLogin 驗證用戶登入
-func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) {
-	// 先驗證帳號格式（快速失敗）
-	account, err := valueobj.NewAccount(req.Account)
-	if err != nil {
-		return nil, apperror.NewAppError(
-			msgid.InvalidInput,
-			appmsg.AccountFormatInvalid,
-			err,
-			apperror.WithLayer("UserService CheckLogin() NewAccount()"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
-			}),
-		)
-	}
-
+func (s *UserService) CheckLogin(account valueobj.Account, password string) (*string, error) {
 	// 查詢用戶
 	user, err := s.repo.GetUsersByAccount(account.Value())
 	if err != nil {
@@ -155,7 +139,7 @@ func (s *UserService) CheckLogin(req request.UserLoginRequest) (*string, error) 
 	}
 
 	// 驗證密碼
-	if !user.VerifyPassword(req.Password) {
+	if !user.VerifyPassword(password) {
 		return nil, apperror.NewAppError(
 			msgid.InvalidInput,
 			appmsg.PasswordIncorrect,

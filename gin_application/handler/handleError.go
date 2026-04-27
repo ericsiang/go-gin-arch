@@ -2,7 +2,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"self_go_gin/common/msgid"
 	"self_go_gin/domains/common/appmsg"
@@ -29,10 +28,7 @@ var (
 
 // HandleError 處理錯誤
 func HandleError(ctx *gin.Context, err error) (bool, *apperror.AppError) {
-	fmt.Println("HandleError err:", err)
-
 	if err == nil {
-		fmt.Println("no error")
 		return true, nil
 	}
 	err = MysqlErrorCheck(err)

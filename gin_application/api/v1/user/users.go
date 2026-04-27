@@ -77,7 +77,6 @@ func CreateUser(ctx *gin.Context) {
 		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_password", msgid.Fail, nil)
 		return
 	}
-	
 
 	userService, err := service.NewUserService()
 	if err != nil {
@@ -122,6 +121,23 @@ func UserLogin(ctx *gin.Context) {
 		return
 	}
 
+	// 先驗證帳號格式（快速失敗）
+	account, err := valueobj.NewAccount(data.Account)
+	if err != nil {
+		appErr := apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.AccountFormatInvalid,
+			err,
+			apperror.WithLayer("Api UserLogin() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": data.Account,
+			}),
+		)
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewAccount fail", appErr)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_account_format", msgid.Fail, nil)
+		return
+	}
+
 	userService, err := service.NewUserService()
 	if err != nil {
 		appErr := err.(*apperror.AppError)
@@ -129,7 +145,8 @@ func UserLogin(ctx *gin.Context) {
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
-	jwtToken, err := userService.CheckLogin(data)
+
+	jwtToken, err := userService.CheckLogin(account, data.Password)
 
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
