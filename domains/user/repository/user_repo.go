@@ -27,6 +27,7 @@ type UserRepository interface {
 // userRepositoryImpl 用戶倉庫實現
 type userRepositoryImpl struct {
 	dao dao.UserDaoInterface
+	rdbCachee *redis.Client
 }
 
 // NewUserRepository 創建用戶倉庫
@@ -42,14 +43,14 @@ func NewUserRepository() (UserRepository, error) {
 	}
 	return &userRepositoryImpl{
 		dao: dao,
+		rdbCachee: container.GetContainer().GetRedisClient(),
 	}, nil
 }
 
 // GetUsersByAccount 根據帳號查詢用戶
 func (r *userRepositoryImpl) GetUsersByAccount(account string) (*entity.User, error) {
 	// 先確認緩存
-	app := container.GetContainer()
-	rdb := app.GetRedisClient()
+	rdb := r.rdbCachee
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	exist, err := rdb.Get(ctx, "user:exists:"+account).Result()
@@ -151,8 +152,8 @@ func (r *userRepositoryImpl) CreateUser(newUser *entity.User) (*entity.User, err
 		)
 	}
 
-	app := container.GetContainer()
-	rdb := app.GetRedisClient()
+
+	rdb := r.rdbCachee
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	_, err = rdb.SetNX(ctx, "user:exists:"+newUser.GetAccount(), 1, 10*time.Minute).Result()

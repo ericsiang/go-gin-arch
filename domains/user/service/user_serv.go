@@ -56,34 +56,10 @@ func NewUserService() (*UserService, error) {
 }
 
 // CreateUser 創建用戶
-func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequest) (*entity.User, error) {
-	// 創建帳號值物件（自動驗證格式）
-	account, err := valueobj.NewAccount(req.Account)
-	if err != nil {
-		return nil, apperror.NewAppError(
-			msgid.InvalidInput,
-			appmsg.AccountFormatInvalid,
-			err,
-			apperror.WithLayer("UserService CreateUser() NewAccount()"),
-			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
-			}),
-		)
-	}
-
-	// 創建密碼值物件（自動驗證強度和加密）
-	password, err := valueobj.NewPasswordFromPlainText(req.Password)
-	if err != nil {
-		return nil, apperror.NewAppError(
-			msgid.InvalidInput,
-			appmsg.PasswordInvalidOrWeak,
-			err,
-			apperror.WithLayer("UserService CreateUser() NewPasswordFromPlainText()"),
-		)
-	}
+func (s *UserService) CreateUser(ctx context.Context, account valueobj.Account, password valueobj.Password) (*entity.User, error) {
 
 	// 檢查帳號是否已存在
-	_, err = s.repo.GetUsersByAccount(req.Account)
+	_, err := s.repo.GetUsersByAccount(account.Value())
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, apperror.NewAppError(
 			msgid.Fail,
@@ -91,7 +67,7 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 			err,
 			apperror.WithLayer("UserService CreateUser() GetUsersByAccount()"),
 			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
+				"account": account.Value(),
 			}),
 		)
 	}
@@ -103,13 +79,14 @@ func (s *UserService) CreateUser(ctx context.Context, req request.CreateUserRequ
 			handler.ErrResourceExist,
 			apperror.WithLayer("UserService CreateUser() GetUsersByAccount() ResourceExist"),
 			apperror.WithLogData(map[string]interface{}{
-				"account": req.Account,
+				"account": account.Value(),
 			}),
 		)
 	}
 
 	// 創建聚合根
-	user := entity.NewUser(account, password)
+	user  := entity.NewUser(account, password)
+
 
 	// 儲存到資料庫
 	createdUser, err := s.repo.CreateUser(user)

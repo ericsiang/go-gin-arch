@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"self_go_gin/common/msgid"
+	"self_go_gin/domains/common/appmsg"
+	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/domains/user/service"
 	"self_go_gin/gin_application/api/v1/user/request"
 	"self_go_gin/gin_application/handler"
@@ -45,6 +47,38 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
+	// 創建帳號值物件（自動驗證格式）
+	account, err := valueobj.NewAccount(data.Account)
+	if err != nil {
+		appErr := apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.AccountFormatInvalid,
+			err,
+			apperror.WithLayer("Api CreateUser() NewAccount()"),
+			apperror.WithLogData(map[string]interface{}{
+				"account": data.Account,
+			}),
+		)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewAccount fail", appErr)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_account_format", msgid.Fail, nil)
+		return
+	}
+
+	// 創建密碼值物件（自動驗證強度和加密）
+	password, err := valueobj.NewPasswordFromPlainText(data.Password)
+	if err != nil {
+		appErr := apperror.NewAppError(
+			msgid.InvalidInput,
+			appmsg.PasswordInvalidOrWeak,
+			err,
+			apperror.WithLayer("Api CreateUser() NewPasswordFromPlainText()"),
+		)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewPasswordFromPlainText fail", appErr)
+		ginresp.ErrorResponse(ctx, http.StatusBadRequest, "invalid_password", msgid.Fail, nil)
+		return
+	}
+	
+
 	userService, err := service.NewUserService()
 	if err != nil {
 		appErr := err.(*apperror.AppError)
@@ -52,7 +86,7 @@ func CreateUser(ctx *gin.Context) {
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
-	_, err = userService.CreateUser(ctx, data)
+	_, err = userService.CreateUser(ctx, account, password)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
 		appErr := err.(*apperror.AppError)

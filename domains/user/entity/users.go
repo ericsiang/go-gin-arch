@@ -92,3 +92,4 @@ func (u *User) GetAccountvalueobj() valueobj.Account {
 func (u *User) GetPasswordHash() string {
 	return u.password.Hash()
 }
+
