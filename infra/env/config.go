@@ -148,15 +148,17 @@ func (c *RabbitMQConfig) String() string {
 
 // ServerConfig 服務器配置
 type ServerConfig struct {
+	AppName         string         `mapstructure:"APP_Name" json:"APP_Name"`
 	AppMode         string         `mapstructure:"APP_Mode" json:"APP_Mode"`
 	Port            int            `mapstructure:"Port" json:"Port"`
 	JwtSecret       string         `mapstructure:"JwtSecret" json:"JwtSecret"`
+	IsEventBroker   bool           `mapstructure:"IsEventBroker" json:"IsEventBroker"`
+	EventBrokerType string         `mapstructure:"EventBrokerType" json:"EventBrokerType"`
+	IsMetrics       bool           `mapstructure:"IsMetrics" json:"IsMetrics"`
 	MysqlDB         MysqlConfig    `mapstructure:"Mysql" json:"Mysql"`
 	Redis           RedisConfig    `mapstructure:"Redis" json:"Redis"`
 	MongoDB         MongoDBConfig  `mapstructure:"MongoDB" json:"MongoDB"`
 	RabbitMQ        RabbitMQConfig `mapstructure:"RabbitMQ" json:"RabbitMQ"`
-	IsEventBroker   bool           `mapstructure:"IsEventBroker" json:"IsEventBroker"`
-	EventBrokerType string         `mapstructure:"EventBrokerType" json:"EventBrokerType"`
 }
 
 // NewServerConfig 創建一個空的服務器配置實例
@@ -216,14 +218,18 @@ func (c *ServerConfig) Validate() error {
 // String 實現 Stringer 接口（脫敏敏感信息）
 func (c *ServerConfig) String() string {
 	return fmt.Sprintf(`ServerConfig{
+	AppName: %s
 	AppMode: %s
 	Port: %d
 	JwtSecret: ***
+	IsEventBroker  : %t
+	EventBrokerType: %s        
+	IsMetrics       : %t
 	MySQL: %s
 	Redis: %s
 	MongoDB: %s
 	RabbitMQ: %s
-}`, c.AppMode, c.Port, c.MysqlDB.String(), c.Redis.String(), c.MongoDB.String(), c.RabbitMQ.String())
+}`, c.AppName, c.AppMode, c.Port, c.IsEventBroker, c.EventBrokerType, c.IsMetrics, c.MysqlDB.String(), c.Redis.String(), c.MongoDB.String(), c.RabbitMQ.String())
 }
 
 // ConfigManager 配置管理器（線程安全）

@@ -50,7 +50,7 @@ func (m *MysqlDB) Connect(serverEnv *env.ServerConfig) error {
 	// 使用配置對象的 DSN 方法生成連接字符串
 	mysqlConfig := serverEnv.MysqlDB
 	dsn := mysqlConfig.DSN()
-	fmt.Printf("正在連接 MySQL: %s\n", mysqlConfig.String())
+	// fmt.Printf("正在連接 MySQL: %s\n", mysqlConfig.String())
 
 	var err error
 	db, err := gorm.Open(mysql.Open(dsn), config)

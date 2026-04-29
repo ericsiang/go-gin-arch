@@ -13,18 +13,10 @@ type Collector struct {
 	HTTPRequestTotal *prometheus.CounterVec
 	// HTTPRequestDuration 記錄 HTTP 請求持續時間，標籤包括 method、path、status
 	HTTPRequestDuration *prometheus.HistogramVec
-	// HTTPRequestSize 記錄 HTTP 請求大小，標籤包括 method、path、status
-	HTTPRequestSize *prometheus.SummaryVec
-	// HTTPResponseSize 記錄 HTTP 回應大小，標籤包括 method、path、status
-	HTTPResponseSize *prometheus.SummaryVec
 
 	// 業務指標
 	// BusinessEvents 記錄業務事件，標籤包括 event_type、domain、status
 	BusinessEvents *prometheus.CounterVec
-	// DatabaseQueryDuration 記錄資料庫查詢持續時間，標籤包括 operation、table、success
-	DatabaseQueryDuration *prometheus.HistogramVec
-	// CacheOperationDuration 記錄快取操作持續時間，標籤包括 operation、cache_type、success
-	CacheOperationDuration *prometheus.HistogramVec
 
 	// 系統指標
 	// GoroutineCount 記錄當前 Goroutine 數量
@@ -36,51 +28,63 @@ type Collector struct {
 }
 
 // NewMetricsCollector 建立新的 MetricsCollector 實例
-func NewMetricsCollector() *Collector {
-	return &Collector{
+func NewMetricsCollector(namespace string) *Collector {
+	collector := &Collector{
 		HTTPRequestTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "http_requests_total",
-				Help: "Total number of HTTP requests",
+				Namespace: namespace,
+				Name:      "http_requests_total",
+				Help:      "Total number of HTTP requests",
 			},
 			[]string{"method", "path", "status", "api_version"},
 		),
 		HTTPRequestDuration: prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
-				Name:    "http_request_duration_seconds",
-				Help:    "HTTP request duration in seconds",
-				Buckets: prometheus.DefBuckets,
+				Namespace: namespace,
+				Name:      "http_request_duration_seconds",
+				Help:      "HTTP request duration in seconds",
+				Buckets:   prometheus.DefBuckets,
 			},
 			[]string{"method", "path", "status"},
 		),
 		BusinessEvents: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
-				Name: "business_events_total",
-				Help: "Total number of business events",
+				Namespace: namespace,
+				Name:      "business_events_total",
+				Help:      "Total number of business events",
 			},
 			[]string{"event_type", "domain", "status"},
 		),
-		DatabaseQueryDuration: prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Name:    "database_query_duration_seconds",
-				Help:    "Database query duration in seconds",
-				Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 2.5, 5, 10},
-			},
-			[]string{"operation", "table", "success"},
-		),
 		GoroutineCount: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Name: "go_goroutines",
-				Help: "Number of goroutines",
+				Namespace: namespace,
+				Name:      "go_goroutines",
+				Help:      "Number of goroutines",
 			},
 		),
 		MemoryUsage: prometheus.NewGauge(
 			prometheus.GaugeOpts{
-				Name: "go_memory_usage_bytes",
-				Help: "Memory usage in bytes",
+				Namespace: namespace,
+				Name:      "go_memory_usage_bytes",
+				Help:      "Memory usage in bytes",
+			},
+		),
+		CPUUsage: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "go_cpu_usage_percent",
+				Help:      "CPU usage in percent",
 			},
 		),
 	}
+
+	prometheus.MustRegister(collector.HTTPRequestTotal)
+	prometheus.MustRegister(collector.HTTPRequestDuration)
+	prometheus.MustRegister(collector.BusinessEvents)
+	prometheus.MustRegister(collector.GoroutineCount)
+	prometheus.MustRegister(collector.MemoryUsage)
+	prometheus.MustRegister(collector.CPUUsage)
+	return collector
 }
 
 // RecordHTTPRequest 記錄 HTTP 請求指標
@@ -92,11 +96,6 @@ func (m *Collector) RecordHTTPRequest(method, path, status, apiVersion string, d
 // RecordBusinessEvent 記錄業務事件
 func (m *Collector) RecordBusinessEvent(eventType, domain, status string) {
 	m.BusinessEvents.WithLabelValues(eventType, domain, status).Inc()
-}
-
-// RecordDatabaseQuery 記錄資料庫查詢
-func (m *Collector) RecordDatabaseQuery(operation, table string, success bool, duration float64) {
-	m.DatabaseQueryDuration.WithLabelValues(operation, table, boolToString(success)).Observe(duration)
 }
 
 func boolToString(b bool) string {

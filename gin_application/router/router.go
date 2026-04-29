@@ -18,6 +18,7 @@ import (
 	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -26,6 +27,11 @@ import (
 func setDefaultMiddlewares(router *gin.Engine) {
 	// Trace 中間件（確保所有請求都有 ID）
 	router.Use(middleware.TraceMiddleware())
+	serverConfig := container.GetContainer().GetConfig()
+	if serverConfig.IsMetrics {
+		// Metrics 中間件（記錄 HTTP 請求指標）
+		router.Use(middleware.MetricsMiddleware())
+	}
 	// 獲取當前工作目錄並構建 log 路徑
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -74,6 +80,10 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 		})
 	})
 
+	serverConfig := container.GetContainer().GetConfig()
+	if serverConfig.IsMetrics {
+		apiV1Group.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	}
 	// apiV1Group.Use(middleware.RateLimit("test-limit")).GET("/limit_ping", func(c *gin.Context) {
 	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
 	// })
