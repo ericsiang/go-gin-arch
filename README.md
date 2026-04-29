@@ -66,7 +66,7 @@
 - Swagger 文檔
 
 **可觀測性**
-- 分布式追蹤：Trace-ID 貫穿全鏈路
+- Trace 追蹤：Trace-ID 貫穿全鏈路
 - 結構化日誌：Zap Logger 分級記錄
 - 優雅關閉：確保請求處理完成
 
