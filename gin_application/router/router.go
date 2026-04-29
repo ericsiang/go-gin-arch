@@ -16,6 +16,7 @@ import (
 	_ "self_go_gin/cmd/first_web_service/docs" // Swagger 文档生成需要导入
 
 	"github.com/gin-contrib/cors"
+
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -54,6 +55,7 @@ func setDefaultMiddlewares(router *gin.Engine) {
 // Router 路由
 func Router() *gin.Engine {
 	router := gin.New()
+	// pprof.Register(router)
 	setDefaultMiddlewares(router)
 	registerSwagger(router)
 	apiV1Group := router.Group("/api/v1")
