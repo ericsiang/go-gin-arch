@@ -16,6 +16,7 @@ help: ## 顯示幫助信息
 	@echo "  make migrate      		- 容器執行資料庫遷移（初始化表結構）"
 	@echo "  make migrate-seed	 	- 容器執行資料庫遷移並填充種子資料"
 	@echo "  make run-web      		- web 本地運行"
+	@echo "  make swagger 			- 生成 Swagger 文檔"
 	@echo "  make run-event-worker 	- event worker 本地運行"
 	@echo "  make run-migrate  		- 資料庫遷移本地運行"
 
@@ -87,6 +88,9 @@ migrate-local: ## 本地執行資料庫遷移
 run-web: ## 本地運行應用（不使用 Docker）
 	@echo "本地運行應用..."
 	go run cmd/first_web_service/main.go
+swagger: ## 生成 Swagger 文檔
+	@echo "生成 Swagger 文檔..."
+	swag init -g cmd/first_web_service/main.go --parseDependency --parseInternal --parseDepth 2
 run-event-worker: ## 本地運行事件工作器
 	@echo "本地運行事件工作器..."
 	go run cmd/event_worker/main.go

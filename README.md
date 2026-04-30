@@ -254,6 +254,9 @@ make run-event-worker
 
 # 4. 資料庫遷移
 make run-migrate
+
+# 5. 生成 swagger 文檔
+make swagger
 ```
 
 ### 可用命令
