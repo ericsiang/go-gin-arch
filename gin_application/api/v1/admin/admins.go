@@ -15,6 +15,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	_ "self_go_gin/gin_application/swaggerdocs"
+
 )
 
 // CreateAdmin 創建管理員
@@ -24,7 +26,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer 用户令牌"
-// @Param request body swagger_docs.DocAdminsCreate true "request body"
+// @Param request body swaggerdocs.DocAdminsCreate true "request body"
 // @Success 200 {string} json "{"msg": {"success": "success"},"data": {}}"
 // @Failure 400 {string} json "{"msg": {"fail": "帳密錯誤"},"data": null}"
 // @Router /api/v1/auth/admins [post]
@@ -68,7 +70,7 @@ func CreateAdmin(ctx *gin.Context) {
 // @Tags Admins
 // @Accept json
 // @Produce json
-// @Param request body swagger_docs.DocAdminsLogin true "request body"
+// @Param request body swaggerdocs.DocAdminsLogin true "request body"
 // @Success 200 {string}  "成功"
 // @Failure 400 {string}  "失敗"
 // @Failure 401 {string}  "Unauthorized"

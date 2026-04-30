@@ -13,7 +13,7 @@ import (
 	"self_go_gin/infra/log/zaplog"
 	"time"
 
-	_ "self_go_gin/cmd/first_web_service/docs" // Swagger 文档生成需要导入
+	_ "self_go_gin/docs" // Swagger 文档生成需要导入
 
 	"github.com/gin-contrib/cors"
 

@@ -10,6 +10,7 @@ import (
 	constset "self_go_gin/common/const"
 	"self_go_gin/container"
 
+	_ "self_go_gin/docs"
 	"self_go_gin/gin_application/router"
 	"strconv"
 	"syscall"
@@ -21,7 +22,7 @@ import (
 // @title  Self go gin Swagger API
 // @version 1.0
 // @description swagger first example
-// @host localhost:5000
+// @host localhost:5001
 // @accept 		json
 // @schemes 	http https
 // @securityDefinitions.apikey	JwtTokenAuth

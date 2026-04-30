@@ -17,6 +17,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	_ "self_go_gin/gin_application/swaggerdocs"
 )
 
 // CreateUser 創建用戶
@@ -25,11 +26,10 @@ import (
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param Authorization header string true "Bearer 用户令牌"
-// @Param request body swagger_docs.DocUsersCreate true "request body"
+// @Param request body swaggerdocs.DocUsersCreate true "request body"
 // @Success 200 {string} json "{"msg": {"success": "success"},"data": {}}"
 // @Failure 400 {string} json "{"msg": {"fail": "帳密錯誤"},"data": null}"
-// @Router /api/v1/auth/users [post]
+// @Router /api/v1/users/createUser [post]
 func CreateUser(ctx *gin.Context) {
 	var data request.CreateUserRequest
 	// var respData response.CreateUserResponse
@@ -101,7 +101,7 @@ func CreateUser(ctx *gin.Context) {
 // @Tags Users
 // @Accept json
 // @Produce json
-// @Param request body swagger_docs.DocUsersLogin true "request body"
+// @Param request body swaggerdocs.DocUsersLogin true "request body"
 // @Success 200 {string}  "成功"
 // @Failure 400 {string}  "失敗"
 // @Failure 401 {string}  "Unauthorized"
@@ -164,11 +164,12 @@ func UserLogin(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security JwtTokenAuth
+// @Param Authorization header string true "Bearer 用户令牌"
 // @Param filterUsersId path string true "filterUsersId"
 // @Success 200 {string}  "成功"
 // @Failure 400 {string}  "失敗"
 // @Failure 401 {string}  "Unauthorized"
-// @Router /api/v1/auth/users/{filterUsersId} [get]
+// @Router /api/v1/users/{filterUsersId} [get]
 func GetUsersByID(ctx *gin.Context) {
 	var data request.GetUsersByIDRequest
 	usersID, ok := ctx.Get("usersID")
