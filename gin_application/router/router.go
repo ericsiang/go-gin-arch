@@ -89,9 +89,6 @@ func setNoAuthRoutes(apiV1Group *gin.RouterGroup) {
 	// apiV1Group.Use(middleware.RateLimit("test-limit")).GET("/limit_ping", func(c *gin.Context) {
 	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
 	// })
-	// apiV1Group.Use(middleware.OpaMiddleware()).GET("/opa_ping", func(c *gin.Context) {
-	// 	c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
-	// })
 
 	apiV1Group.GET("/logtest", func(_ *gin.Context) {
 		test := true
@@ -135,11 +132,13 @@ func Login(userRouter, adminRouter *gin.RouterGroup) {
 
 // Users 用戶
 func Users(router *gin.RouterGroup) {
+	router.Use(middleware.OpaMiddleware())
 	router.GET("/:filterUsersID", v1_user.GetUsersByID)
 }
 
 // Admins 管理員
 func Admins(router *gin.RouterGroup) {
+	router.Use(middleware.OpaMiddleware())
 	router.GET("/:filterAdminsID", v1_admin.GetAdminsByID)
 	Shutdown(router)
 }

@@ -5,18 +5,15 @@ import future.keywords.contains
 import future.keywords.if
 import future.keywords.in
 
-# user-role assignments
-# user_roles := {
-#     "admin1": ["admin", "dev"],
-#     "user1": ["hr"],
-# }
 
 # role-permissions assignments
 role_permissions := {
-  "admin": [
-    {"resource": "user", "action": "read"},
-    {"resource": "user", "action": "edit"},
-  ]
+  "admins": [
+    {"resource": "all", "action": "create"},
+    {"resource": "all", "action": "read"},
+    {"resource": "all", "action": "edit"},
+    {"resource": "all", "action": "delete"},
+  ],
 }
 
 default allow := false
@@ -26,19 +23,18 @@ allow if {
   # roles := user_roles[input.user]
   # for each role in that list
   # r := roles[_]
-  input.role == "admin"
+  input.role == "admins"
   # lookup the permissions list for role r
   permissions := role_permissions[input.role]
   # for each permission
   p := permissions[_]
 
-  # check if the permission granted to r matches the user's request
+  # check matches 
   p == {"action": input.action, "resource": input.resource}
 }
 
-
 allow {
-  input.role == "user"
-  action_groups = ["read","edit"]
-  input.action in action_groups
+  input.role == "users"
+  input.resource == "user" 
+  input.action in ["read","edit"]
 }

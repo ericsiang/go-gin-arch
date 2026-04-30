@@ -2,10 +2,10 @@
 package opa
 
 import (
+	"context"
 	_ "embed"
 	"errors"
 
-	"github.com/gin-gonic/gin"
 	"github.com/open-policy-agent/opa/rego"
 )
 
@@ -19,8 +19,9 @@ func readPolicy() ([]byte, error) {
 }
 
 // GetQueryResult 根據請求上下文獲取OPA查詢結果
-func GetQueryResult(c *gin.Context) (rego.ResultSet, error) {
+func GetQueryResult(role, action, resource string) (rego.ResultSet, error) {
 	policy, err := readPolicy()
+	ctx := context.TODO()
 	if err != nil {
 		return defaultResult, errors.New("failed to readPolicy : ")
 	}
@@ -28,7 +29,7 @@ func GetQueryResult(c *gin.Context) (rego.ResultSet, error) {
 	query, err := rego.New(
 		rego.Query("data.rbac.allow"),
 		rego.Module("rbac.rego", string(policy)),
-	).PrepareForEval(c)
+	).PrepareForEval(ctx)
 
 	if err != nil {
 		err1 := errors.New("failed to prepare rbac policy : ")
@@ -36,11 +37,10 @@ func GetQueryResult(c *gin.Context) (rego.ResultSet, error) {
 		return defaultResult, err
 	}
 
-	// evaluate rego query by supplying values extracted from header
-	result, err := query.Eval(c, rego.EvalInput(map[string]interface{}{
-		"role":     c.Request.Header.Get("role"),
-		"action":   c.Request.Header.Get("action"),
-		"resource": c.Request.Header.Get("resource"),
+	result, err := query.Eval(ctx, rego.EvalInput(map[string]interface{}{
+		"role":     role,
+		"action":   action,
+		"resource": resource,
 	}))
 
 	if err != nil {
