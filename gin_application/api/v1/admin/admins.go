@@ -29,7 +29,7 @@ import (
 // @Param request body swaggerdocs.DocAdminsCreate true "request body"
 // @Success 200 {string} json "{"msg": {"success": "success"},"data": {}}"
 // @Failure 400 {string} json "{"msg": {"fail": "帳密錯誤"},"data": null}"
-// @Router /api/v1/auth/admins [post]
+// @Router /api/v1/admins [post]
 func CreateAdmin(ctx *gin.Context) {
 	var data request.CreateAdminRequest
 	if err := ctx.ShouldBindBodyWith(&data, binding.JSON); err != nil {
@@ -117,7 +117,7 @@ func AdminLogin(ctx *gin.Context) {
 // @Success 200 {string}  "成功"
 // @Failure 400 {string}  "失敗"
 // @Failure 401 {string}  "Unauthorized"
-// @Router /api/v1/auth/admins/{filterAdminsId} [get]
+// @Router /api/v1/admins/{filterAdminsId} [get]
 func GetAdminsByID(ctx *gin.Context) {
 	var data request.GetAdminsByIDRequest
 
