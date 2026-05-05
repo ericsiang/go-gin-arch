@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-	"time"
 
 	"self_go_gin/infra/env"
 
@@ -198,8 +197,7 @@ func (s *RabbitMQServer) handleMessages(eventType string, deliveries <-chan amqp
 		fmt.Printf("Processing event from RabbitMQ: type=%s, source=%s\n", event.Type, event.Source)
 
 		// 調用處理器
-		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second) // 設置處理超時
-		if err := handler.Handle(ctx, &event); err != nil {
+		if err := handler.Handle(context.Background(), &event); err != nil {
 			zap.S().Error("Error processing event", zap.String("event_type", eventType), zap.Error(err))
 			// 拒絕消息，重新入隊
 			err = delivery.Nack(false, true)

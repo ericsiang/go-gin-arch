@@ -154,14 +154,17 @@ func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) er
 // UserCheckLoginEventHandler 處理用戶登錄事件
 type UserCheckLoginEventHandler struct{}
 
+// NewUserCheckLoginEventHandler 創建用戶登錄事件處理器
 func NewUserCheckLoginEventHandler() *UserCheckLoginEventHandler {
 	return &UserCheckLoginEventHandler{}
 }
 
+// EventType 返回處理的事件類型
 func (h *UserCheckLoginEventHandler) EventType() string {
 	return UserCheckLoginEventType
 }
 
+// Handle 處理用戶登錄事件
 func (h *UserCheckLoginEventHandler) Handle(_ context.Context, evt *event.Event) error {
 	var payload UserCheckLoginEventPayload
 	if err := evt.UnmarshalPayload(&payload); err != nil {

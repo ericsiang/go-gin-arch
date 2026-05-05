@@ -15,8 +15,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	// 引入 swaggerdocs 包以生成對應 Swagger 文檔格式
 	_ "self_go_gin/gin_application/swaggerdocs"
-
 )
 
 // CreateAdmin 創建管理員

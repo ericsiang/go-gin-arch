@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	// "embed"
 	_ "embed"
 	"net/http"
 	opa "self_go_gin/util/open_policy_agent"
@@ -36,7 +37,6 @@ func OpaMiddleware() gin.HandlerFunc {
 		default:
 			action = "unknown"
 		}
-
 
 		result, err := opa.GetQueryResult(role, action, resource)
 		if err != nil {

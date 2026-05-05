@@ -193,7 +193,7 @@ func TestParseToken(t *testing.T) {
 
 func TestParseTokenErrors(t *testing.T) {
 	setupTest(t)
-
+	// #nosec
 	tests := []struct {
 		name        string
 		token       string

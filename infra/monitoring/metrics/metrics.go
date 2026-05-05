@@ -97,10 +97,3 @@ func (m *Collector) RecordHTTPRequest(method, path, status, apiVersion string, d
 func (m *Collector) RecordBusinessEvent(eventType, domain, status string) {
 	m.BusinessEvents.WithLabelValues(eventType, domain, status).Inc()
 }
-
-func boolToString(b bool) string {
-	if b {
-		return "true"
-	}
-	return "false"
-}
