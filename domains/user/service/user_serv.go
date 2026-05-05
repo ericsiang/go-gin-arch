@@ -159,6 +159,17 @@ func (s *UserService) CheckLogin(account valueobj.Account, password string) (*st
 		)
 	}
 
+	err = s.publishUserCheckLoginEvent(context.Background(), user)
+	if err != nil {
+		// 記錄錯誤但不阻止登入流程
+		return nil, apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPublishFailed,
+			err,
+			apperror.WithLayer("UserService CheckLogin() publishUserCheckLoginEvent()"),
+		)
+	}
+
 	return &jwtToken, nil
 }
 
@@ -192,5 +203,38 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 	}
 
 	zap.S().Infof("User created event published successfully for UserID: %d, Account: %s", user.ID, user.GetAccount())
+	return nil
+}
+
+// publishUserCheckLoginEvent 發布用戶登入事件
+func (s *UserService) publishUserCheckLoginEvent(ctx context.Context, user *entity.User) error {
+	payload := events.UserCheckLoginEventPayload{
+		UserID:  user.ID,
+		Account: user.GetAccount(),
+		LoginAt: time.Now().Format(time.RFC3339),
+	}
+
+	evt, err := event.NewEvent(events.UserCheckLoginEventType, payload)
+	if err != nil {
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPublishFailed,
+			err,
+			apperror.WithLayer("UserService publishUserCheckLoginEvent() NewEvent()"),
+		)
+	}
+
+	evt.Source = "user-service"
+
+	if err := s.publisher.Publish(ctx, evt); err != nil {
+		return apperror.NewAppError(
+			msgid.Fail,
+			"failed to publish event",
+			err,
+			apperror.WithLayer("UserService publishUserCheckLoginEvent() Publish()"),
+		)
+	}
+
+	zap.S().Infof("User check login event published successfully for UserID: %d, Account: %s", user.ID, user.GetAccount())
 	return nil
 }

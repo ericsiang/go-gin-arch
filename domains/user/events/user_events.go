@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"self_go_gin/common/msgid"
 	"self_go_gin/domains/common/appmsg"
-	apperror "self_go_gin/internal/apperror"
-
 	"self_go_gin/infra/event"
+	apperror "self_go_gin/internal/apperror"
 
 	"go.uber.org/zap"
 )
@@ -21,6 +20,8 @@ const (
 	UserUpdatedEventType = "user.updated"
 	// UserDeletedEventType 用戶刪除事件
 	UserDeletedEventType = "user.deleted"
+	// UserCheckLoginEventType 用戶登錄事件
+	UserCheckLoginEventType = "user.check_login"
 )
 
 // UserCreatedEventPayload 用戶創建事件的負載
@@ -43,6 +44,13 @@ type UserDeletedEventPayload struct {
 	UserID   uint   `json:"user_id"`
 	Account  string `json:"account"`
 	DeleteAt string `json:"delete_at"`
+}
+
+// UserCheckLoginEventPayload 用戶登錄事件的負載
+type UserCheckLoginEventPayload struct {
+	UserID  uint64 `json:"user_id"`
+	Account string `json:"account"`
+	LoginAt string `json:"login_at"`
 }
 
 // UserCreatedEventHandler 處理用戶創建事件
@@ -75,6 +83,8 @@ func (h *UserCreatedEventHandler) Handle(_ context.Context, evt *event.Event) er
 	zap.S().Infof("Processing user creation event for UserID: %d, Account: %s", payload.UserID, payload.Account)
 
 	zap.S().Infof("User created event processed successfully for UserID: %d", payload.UserID)
+	fmt.Printf("Processing user creation event: payload=%+v:\n", payload)
+
 	return nil
 }
 
@@ -138,5 +148,31 @@ func (h *UserDeletedEventHandler) Handle(_ context.Context, evt *event.Event) er
 
 	// 實現具體的業務邏輯
 	zap.S().Infof("User deleted event processed successfully for UserID: %d", payload.UserID)
+	return nil
+}
+
+// UserCheckLoginEventHandler 處理用戶登錄事件
+type UserCheckLoginEventHandler struct{}
+
+func NewUserCheckLoginEventHandler() *UserCheckLoginEventHandler {
+	return &UserCheckLoginEventHandler{}
+}
+
+func (h *UserCheckLoginEventHandler) EventType() string {
+	return UserCheckLoginEventType
+}
+
+func (h *UserCheckLoginEventHandler) Handle(_ context.Context, evt *event.Event) error {
+	var payload UserCheckLoginEventPayload
+	if err := evt.UnmarshalPayload(&payload); err != nil {
+		return apperror.NewAppError(
+			msgid.Fail,
+			appmsg.UserEventPayloadParseFailed,
+			fmt.Errorf("failed to unmarshal payload: %w", err),
+			apperror.WithLayer("Event"),
+		)
+	}
+
+	fmt.Printf("UserCheckLoginEvent payload: %+v\n", payload)
 	return nil
 }

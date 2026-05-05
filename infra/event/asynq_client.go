@@ -94,6 +94,15 @@ func (c *AsynqClient) PublishWithOptions(ctx context.Context, event *Event, opts
 	}
 
 	task := asynq.NewTask(event.Type, payload, asynqOpts...)
+	if event.Type == "user.check_login" {
+		fmt.Printf("Publishing user check login event: event=%+v:\n", event)
+		info, err := c.client.Enqueue(task, asynq.ProcessIn(30*time.Second),asynq.Queue("high"))
+		if err != nil {
+			return fmt.Errorf("failed to enqueue user check login event: %w", err)
+		}
+		fmt.Printf("User check login event published: type=%s, queue=%s, id=%s\n", event.Type, info.Queue, info.ID)
+		return nil
+	}
 
 	info, err := c.client.EnqueueContext(ctx, task, asynqOpts...)
 	if err != nil {
