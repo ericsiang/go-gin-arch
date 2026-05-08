@@ -55,35 +55,11 @@ func NewMetricsCollector(namespace string) *Collector {
 			},
 			[]string{"event_type", "domain", "status"},
 		),
-		GoroutineCount: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Namespace: namespace,
-				Name:      "go_goroutines",
-				Help:      "Number of goroutines",
-			},
-		),
-		MemoryUsage: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Namespace: namespace,
-				Name:      "go_memory_usage_bytes",
-				Help:      "Memory usage in bytes",
-			},
-		),
-		CPUUsage: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Namespace: namespace,
-				Name:      "go_cpu_usage_percent",
-				Help:      "CPU usage in percent",
-			},
-		),
 	}
 
 	prometheus.MustRegister(collector.HTTPRequestTotal)
 	prometheus.MustRegister(collector.HTTPRequestDuration)
 	prometheus.MustRegister(collector.BusinessEvents)
-	prometheus.MustRegister(collector.GoroutineCount)
-	prometheus.MustRegister(collector.MemoryUsage)
-	prometheus.MustRegister(collector.CPUUsage)
 	return collector
 }
 
