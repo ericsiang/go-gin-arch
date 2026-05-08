@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"self_go_gin/common/msgid"
-	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
 	"self_go_gin/domains/user/entity"
@@ -30,28 +29,11 @@ type UserService struct {
 }
 
 // NewUserService 創建用戶服務層
-func NewUserService() (*UserService, error) {
-	repo, err := repository.NewUserRepository()
-	if err != nil {
-		return nil, apperror.NewAppError(
-			msgid.Fail,
-			appmsg.InitFailed,
-			err,
-			apperror.WithLayer("UserService NewUserService()"),
-		)
-	}
-	app := container.GetContainer()
-	if app.GetConfig().IsEventBroker {
-		broker := app.GetEventBroker()
-		return &UserService{
-			repo:      repo,
-			publisher: broker.Publisher(), // 使用工廠獲取事件發布器
-		}, nil
-	}
-
+func NewUserService(repo repository.UserRepository, publisher event.Publisher) *UserService {
 	return &UserService{
-		repo: repo,
-	}, nil
+		repo:      repo,
+		publisher: publisher,
+	}
 }
 
 // CreateUser 創建用戶

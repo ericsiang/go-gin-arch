@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"self_go_gin/common/msgid"
+	"self_go_gin/domains/admin/repository"
 	"self_go_gin/domains/admin/service"
 	"self_go_gin/gin_application/api/v1/admin/request"
 	"self_go_gin/gin_application/api/v1/admin/response"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+
 	// 引入 swaggerdocs 包以生成對應 Swagger 文檔格式
 	_ "self_go_gin/gin_application/swaggerdocs"
 )
@@ -44,16 +46,20 @@ func CreateAdmin(ctx *gin.Context) {
 		return
 	}
 
-	adminService, err := service.NewAdminService()
+	repo, err := repository.NewAdminRepository()
 	if err != nil {
-		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() NewAdminService() fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() NewAdminRepository() fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
+
+	adminService := service.NewAdminService(repo)
 	admin, err := adminService.CreateAdmin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() CreateAdmin() fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateAdmin() CreateAdmin() fail", appErr)
 		return
 	}
 
@@ -90,16 +96,19 @@ func AdminLogin(ctx *gin.Context) {
 		return
 	}
 
-	adminService, err := service.NewAdminService()
+	repo, err := repository.NewAdminRepository()
 	if err != nil {
-		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() NewAdminService fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() NewAdminRepository() fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
+	adminService := service.NewAdminService(repo)
 	jwtToken, err := adminService.CheckLogin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
-		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() CheckLogin fail", err)
+		appErr := err.(*apperror.AppError)
+		ginlogger.LogErrorWithStack(ctx, "Api AdminLogin() CheckLogin fail", appErr)
 		return
 	}
 	ginresp.SuccessResponse(ctx, http.StatusOK, "", ginresp.CreateMsgData("jwt_token", *jwtToken), msgid.Success)

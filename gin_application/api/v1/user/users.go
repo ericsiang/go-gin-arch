@@ -6,17 +6,21 @@ import (
 	"net/http"
 
 	"self_go_gin/common/msgid"
+	"self_go_gin/container"
 	"self_go_gin/domains/common/appmsg"
 	"self_go_gin/domains/common/valueobj"
+	"self_go_gin/domains/user/repository"
 	"self_go_gin/domains/user/service"
 	"self_go_gin/gin_application/api/v1/user/request"
 	"self_go_gin/gin_application/handler"
 	ginlogger "self_go_gin/gin_application/inter/log"
 	ginresp "self_go_gin/gin_application/inter/response"
+	"self_go_gin/infra/event"
 	"self_go_gin/internal/apperror"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+
 	// 引入 swaggerdocs 包以生成對應 Swagger 文檔格式
 	_ "self_go_gin/gin_application/swaggerdocs"
 )
@@ -79,13 +83,21 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	userService, err := service.NewUserService()
+	repo, err := repository.NewUserRepository()
 	if err != nil {
 		appErr := err.(*apperror.AppError)
-		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewUserService fail", appErr)
+		ginlogger.LogErrorWithStack(ctx, "Api CreateUser() NewUserRepository fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
+
+	app := container.GetContainer()
+	var publisher event.Publisher
+	if app.GetConfig().IsEventBroker {
+		publisher = app.GetEventBroker().Publisher()
+	}
+
+	userService := service.NewUserService(repo, publisher)
 	_, err = userService.CreateUser(ctx, account, password)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
@@ -139,14 +151,21 @@ func UserLogin(ctx *gin.Context) {
 		return
 	}
 
-	userService, err := service.NewUserService()
+	repo, err := repository.NewUserRepository()
 	if err != nil {
 		appErr := err.(*apperror.AppError)
-		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewUserService fail", appErr)
+		ginlogger.LogErrorWithStack(ctx, "Api UserLogin() NewUserRepository fail", appErr)
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
 
+	app := container.GetContainer()
+	var publisher event.Publisher
+	if app.GetConfig().IsEventBroker {
+		publisher = app.GetEventBroker().Publisher()
+	}
+
+	userService := service.NewUserService(repo, publisher)
 	jwtToken, err := userService.CheckLogin(account, data.Password)
 
 	ok, err := handler.HandleError(ctx, err)
