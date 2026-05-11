@@ -19,6 +19,8 @@ help: ## 顯示幫助信息
 	@echo "  make swagger 			- 生成 Swagger 文檔"
 	@echo "  make run-event-worker 	- event worker 本地運行"
 	@echo "  make run-migrate  		- 資料庫遷移本地運行"
+	@echo "  make metrics-up 		- 啟動 metrics 服務"
+	@echo "  make metrics-down 		- 停止 metrics 服務"
 
 
 fmt: ## 格式化 Go 程式碼
@@ -28,37 +30,37 @@ lint: ## 執行 Go 靜態程式碼分析
 
 build: ## 構建 Docker 映像
 	@echo "構建 Docker 映像..."
-	cd scripts/docker && docker-compose build
+	cd scripts/docker/app && docker-compose build
 
 up: ## 啟動所有服務
 	@echo "啟動所有服務..."
-	cd scripts/docker && docker-compose up -d
+	cd scripts/docker/app && docker-compose up -d
 	@echo "服務已啟動！"
 down: ## 停止所有服務
 	@echo "停止所有服務..."
-	cd scripts/docker && docker-compose down
+	cd scripts/docker/app && docker-compose down
 
 logs: ## 查看日誌
-	cd scripts/docker && docker-compose logs -f app
+	cd scripts/docker/app && docker-compose logs -f app
 
 logs-all: ## 查看所有服務日誌
-	cd scripts/docker && docker-compose logs -f
+	cd scripts/docker/app && docker-compose logs -f
 
 clean: ## 清理所有容器和卷
 	@echo "清理所有容器和卷..."
-	cd scripts/docker && docker-compose down -v
+	cd scripts/docker/app && docker-compose down -v
 	@echo "清理完成！"
 
 restart: ## 重啟服務
 	@echo "重啟服務..."
-	cd scripts/docker && docker-compose restart app
+	cd scripts/docker/app && docker-compose restart app
 
 ps: ## 查看運行中的容器
-	cd scripts/docker && docker-compose ps
+	cd scripts/docker/app && docker-compose ps
 
 stats: ## 查看容器記憶體使用情況
 	@echo "檢視容器記憶體使用情況..."
-	cd scripts/docker && docker-compose stats --no-stream
+	cd scripts/docker/app && docker-compose stats --no-stream
 
 inspect: ## 查看容器資源限制配置 (例: make inspect APP=gin-app)
 	@APP_NAME=$(APP); \
@@ -66,7 +68,7 @@ inspect: ## 查看容器資源限制配置 (例: make inspect APP=gin-app)
 		APP_NAME="gin-app"; \
 	fi; \
 	echo "查看容器 '$$APP_NAME' 的資源限制配置..."; \
-	cd scripts/docker && docker inspect $$APP_NAME | grep -iA 20 "Memory"
+	cd scripts/docker/app && docker inspect $$APP_NAME | grep -iA 20 "Memory"
 
 # 資料庫遷移
 migrate: ## 執行資料庫遷移（初始化資料表）
@@ -97,6 +99,12 @@ run-event-worker: ## 本地運行事件工作器
 run-migrate: ## 本地運行資料庫遷移
 	@echo "本地運行資料庫遷移..."
 	go run cmd/migrate/main.go
+metrics-up: ## 啟動 metrics 服務
+	@echo "啟動 metrics 服務..."
+	cd scripts/docker/metrics && docker-compose up -d
+metrics-down: ## 停止 metrics 服務
+	@echo "停止 metrics 服務..."
+	cd scripts/docker/metrics && docker-compose down
 
 # 構建本地二進制文件
 build-local: ## 構建本地二進制文件

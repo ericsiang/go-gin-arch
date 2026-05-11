@@ -79,8 +79,8 @@ services:
   # Go Gin Application
   app:
     build:
-      context: ../../
-      dockerfile: scripts/docker/Dockerfile
+      context: ../../../
+      dockerfile: scripts/docker/app/Dockerfile
     container_name: gin-app
     ports:
       - "5001:5001"
@@ -88,8 +88,8 @@ services:
       - APP_MODE=debug
       - TZ=Asia/Taipei
     volumes:
-      - ../../conf/env.docker.yaml:/app/conf/env.yaml:ro
-      - ../../app_logs:/app/log
+      - ../../../conf/env.docker.yaml:/app/conf/env.yaml:ro
+      - ../../../app_logs:/app/log
     depends_on:
       mysql:
         condition: service_healthy
@@ -115,16 +115,16 @@ services:
   # Event Worker Service
   app-event:
     build:
-      context: ../../
-      dockerfile: scripts/docker/Dockerfile
+      context: ../../../
+      dockerfile: scripts/docker/app/Dockerfile
     container_name: gin-app-event
     environment:
       - APP_MODE=debug
       - TZ=Asia/Taipei
       - CONFIG_PATH=/app/conf/
     volumes:
-      - ../../conf/env.docker.yaml:/app/conf/env.yaml:ro
-      - ../../app_logs:/app/log
+      - ../../../conf/env.docker.yaml:/app/conf/env.yaml:ro
+      - ../../../app_logs:/app/log
     depends_on:
       redis:
         condition: service_healthy

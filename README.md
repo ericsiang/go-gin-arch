@@ -4,6 +4,7 @@
 * **框架和語言**：Go 1.24+, Gin
 * **資料庫**：MySQL, Redis
 * **事件驅動**：Asynq, RabbitMQ
+* **可觀測性**：Prometheus + Grafana
 * **容器化**：Docker, Docker Compose
 * **其他**：JWT, OPA, Zap, GORM, Viper, Swagger
 
@@ -15,6 +16,7 @@
 - **可插拔的架構設計** - 應用框架可隨時替換（Gin ↔ Echo）
 - **事件驅動架構** - 支援 Asynq / RabbitMQ，可透過環境變數快速切換
 - **完整的 DDD 實踐** - Entity、ValueObject、Repository、Service 分層清晰
+- **可觀測性** - Prometheus 指標收集 + Grafana 即時監控面板
 - **生產級特性** - 統一錯誤處理、結構化日誌、Trace ID 追蹤、優雅關閉
 - **高可維護性** - 業務邏輯與框架解耦，降低替換成本
 
@@ -68,6 +70,8 @@
 **可觀測性**
 - Trace 追蹤：Trace-ID 貫穿全鏈路
 - 結構化日誌：Zap Logger 分級記錄
+- 性能指標：Prometheus 收集 HTTP/系統指標
+- 可視化監控：Grafana 儀表板展示
 - 優雅關閉：確保請求處理完成
 
 **容器化**
@@ -174,6 +178,44 @@ graph TB
         
 ```
 
+### 可觀測性架構 (Prometheus + Grafana)
+``` mermaid
+graph LR
+    App["應用服務<br/>HTTP Handler<br/>Prometheus Middleware"]
+    Prom["Prometheus<br/>:9090<br/>抓取指標"]
+    Grafana["Grafana<br/>:3000<br/>視覺化監控"]
+    
+    subgraph Metrics["收集指標"]
+        M1["HTTP 計數器<br/>請求總數、狀態"]
+        M2["系統資源<br/>Goroutine、內存"]
+    end
+    
+    App --> M1
+    App --> M2
+
+    M1 -.-> Prom
+    M2 -.-> Prom
+
+    
+    Prom -->|PromQL 查詢| Grafana
+    Grafana -->|即時面板| User["開發者 / PM"]
+```
+
+**核心指標**
+| 指標                                      | 類型      | 場景                 |
+| ----------------------------------------- | --------- | -------------------- |
+| `http_requests_total`                     | Counter   | 追蹤 QPS、按端點分析 |
+| `go_goroutines` / `go_memory_usage_bytes` | Gauge     | 檢測洩漏、資源告警   |
+
+**常用 PromQL 查詢**
+```promql
+# 實時 QPS
+rate(http_requests_total[1m])
+
+# 實時 API status RPS
+sum by (path,status) (rate(SiangGin_http_requests_total[1m]))
+
+```
 
 ### 初始化容器層架構
 ``` mermaid
@@ -264,6 +306,27 @@ make swagger
 make help  # 查看所有可用命令
 ```
 
+### 監控系統 (Prometheus + Grafana)
+**Docker 部署包含以下服務**
+- Prometheus (port 9090) - 自動抓取應用指標
+- Grafana (port 3000) - 視覺化面板和告警
+- 應用暴露 `/api/v1/metrics` 端點供 Prometheus 抓取
+
+**本地開發啟動監控**
+```bash
+# Docker Compose 已包含 Prometheus + Grafana
+make up
+
+# 訪問:
+# - Grafana: http://localhost:3000 (admin/admin)
+# - Prometheus: http://localhost:9090
+# - 應用指標: http://localhost:5001/api/v1/metrics
+```
+
+**監控面板內容**
+- 實時 QPS
+- Goroutine / 內存使用趨勢
+
 ### 壓力測試（可選）
 需要安裝 wrk
 ```bash
@@ -346,5 +409,10 @@ wrk -t8 -c100 -d30s -s ./scripts/wrk/token.lua --latency http://localhost:5001
         <td><a href="https://github.com/hibiken/asynq" target="_blank">asynq</a></td>
         <td>基於 Redis 的分布式任務隊列和異步處理庫，用於實現事件驅動架構</td>
         <td><a href="https://www.tizi365.com/topic/14001.html" target="_blank">open</a>  </td>
+    </tr>
+    <tr>
+        <td><a href="https://github.com/prometheus/client_golang" target="_blank">prometheus client_golang</a></td>
+        <td>Prometheus 客户端庫，收集 HTTP 請求、業務事件、系統指標</td>
+        <td> - </td>
     </tr>
 </table>

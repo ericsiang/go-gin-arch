@@ -22,3 +22,7 @@ conf/env.docker.yaml
 
 # 如果有本地测试配置
 conf/env.local.yaml
+
+# Grafana 数据目录
+scripts/docker/metrics/prometheus-data/data/*
+scripts/docker/metrics/grafana-data/*

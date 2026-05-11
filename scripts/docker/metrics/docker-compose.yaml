@@ -1,0 +1,21 @@
+services:
+  prometheus:
+    container_name: prometheus-service2
+    image: prom/prometheus
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+    volumes:
+      - ./prometheus-data/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      - ./prometheus-data/data:/prometheus/data
+    ports:
+      - "9090:9090"
+
+  grafana:
+    container_name: grafana-service2
+    image: grafana/grafana
+    volumes:
+      - ./grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
