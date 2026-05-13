@@ -74,15 +74,18 @@ type Subscriber interface {
 }
 
 // NewEvent 創建一個新事件
-func NewEvent(eventType string, payload interface{}) (*Event, error) {
+func NewEvent(eventType string, payload interface{}, source string, traceID string, timestamp time.Time) (*Event, error) {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Event{
-		Type:    eventType,
-		Payload: payloadBytes,
+		Type:      eventType,
+		Payload:   payloadBytes,
+		Source:    source,
+		TraceID:   traceID,
+		Timestamp: timestamp,
 	}, nil
 }
 

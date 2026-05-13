@@ -97,7 +97,7 @@ func CreateUser(ctx *gin.Context) {
 		publisher = app.GetEventBroker().Publisher()
 	}
 
-	userService := service.NewUserService(repo, publisher)
+	userService := service.NewUserService(ctx, repo, publisher)
 	_, err = userService.CreateUser(ctx, account, password)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
@@ -165,7 +165,7 @@ func UserLogin(ctx *gin.Context) {
 		publisher = app.GetEventBroker().Publisher()
 	}
 
-	userService := service.NewUserService(repo, publisher)
+	userService := service.NewUserService(ctx, repo, publisher)
 	jwtToken, err := userService.CheckLogin(account, data.Password)
 
 	ok, err := handler.HandleError(ctx, err)

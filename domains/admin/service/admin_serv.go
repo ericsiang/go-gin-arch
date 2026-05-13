@@ -2,6 +2,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"self_go_gin/common/msgid"
 	"self_go_gin/domains/admin/entity"
@@ -18,12 +19,14 @@ import (
 
 // AdminService 管理員服務層
 type AdminService struct {
+	ctx  context.Context
 	repo repository.AdminRepository
 }
 
 // NewAdminService 創建管理員服務層
-func NewAdminService(repo repository.AdminRepository) (*AdminService) {
+func NewAdminService(ctx context.Context, repo repository.AdminRepository) *AdminService {
 	return &AdminService{
+		ctx:  ctx,
 		repo: repo,
 	}
 }

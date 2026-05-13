@@ -176,6 +176,7 @@ func (h *UserCheckLoginEventHandler) Handle(_ context.Context, evt *event.Event)
 		)
 	}
 
+	fmt.Printf("Processing event: %+v, \n", evt)
 	fmt.Printf("UserCheckLoginEvent payload: %+v\n", payload)
 	return nil
 }

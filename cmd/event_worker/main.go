@@ -107,6 +107,7 @@ func registerEventHandlers(subscriber event.Subscriber) error {
 		events.NewUserCreatedEventHandler(),
 		events.NewUserUpdatedEventHandler(),
 		events.NewUserDeletedEventHandler(),
+		events.NewUserCheckLoginEventHandler(),
 	}
 
 	for _, handler := range handlers {

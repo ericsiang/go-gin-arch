@@ -86,7 +86,7 @@ func getHTTPStatus(code msgid.MsgID) int {
 		return http.StatusNotFound
 	case msgid.ResourceExist:
 		return http.StatusConflict
-	case msgid.TokenExpires, msgid.TokenInvalid:
+	case msgid.TokenExpires, msgid.TokenInvalid, msgid.LoginNotExist:
 		return http.StatusUnauthorized
 	case msgid.RuleNotAllow:
 		return http.StatusForbidden

@@ -54,7 +54,7 @@ func CreateAdmin(ctx *gin.Context) {
 		return
 	}
 
-	adminService := service.NewAdminService(repo)
+	adminService := service.NewAdminService(ctx, repo)
 	admin, err := adminService.CreateAdmin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {
@@ -103,7 +103,7 @@ func AdminLogin(ctx *gin.Context) {
 		ginresp.ErrorResponse(ctx, http.StatusInternalServerError, "internal_server_error", msgid.Fail, nil)
 		return
 	}
-	adminService := service.NewAdminService(repo)
+	adminService := service.NewAdminService(ctx, repo)
 	jwtToken, err := adminService.CheckLogin(data)
 	ok, err := handler.HandleError(ctx, err)
 	if !ok {

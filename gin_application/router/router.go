@@ -156,8 +156,12 @@ func Shutdown(router *gin.RouterGroup) {
 					Account:  "slow_test_user",
 					CreateAt: time.Now().Format(time.RFC3339),
 				}
-				evt, _ := event.NewEvent(events.UserCreatedEventType, payload)
-				evt.Source = "slow-test"
+				trace_id, ok := c.Get("trace_id")
+				if !ok {
+					trace_id = "no-trace-id"
+				}
+				evt, _ := event.NewEvent(events.UserCreatedEventType, payload, "slow-test", trace_id.(string), time.Now())
+
 				err := broker.Publisher().Publish(c, evt)
 				if err != nil {
 					zap.L().Error("Failed to publish event", zap.Error(err))

@@ -13,11 +13,13 @@ const (
 	TokenExpires
 	// TokenInvalid 令牌無效
 	TokenInvalid
+	// LoginNotExist 登錄不存在
+	LoginNotExist
 	// NoContent 無內容
 	NoContent
 	// DuplicateEntry 重複條目
 	DuplicateEntry
-	// RuleNotAllow 规則不允許
+	// RuleNotAllow 規則不允許
 	RuleNotAllow
 	// ResourceExist 資源已存在
 	ResourceExist

@@ -24,13 +24,15 @@ import (
 
 // UserService 用戶服務層
 type UserService struct {
+	ctx       context.Context
 	repo      repository.UserRepository
 	publisher event.Publisher
 }
 
 // NewUserService 創建用戶服務層
-func NewUserService(repo repository.UserRepository, publisher event.Publisher) *UserService {
+func NewUserService(ctx context.Context, repo repository.UserRepository, publisher event.Publisher) *UserService {
 	return &UserService{
+		ctx:       ctx,
 		repo:      repo,
 		publisher: publisher,
 	}
@@ -100,7 +102,7 @@ func (s *UserService) CheckLogin(account valueobj.Account, password string) (*st
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.NewAppError(
-				msgid.NoContent,
+				msgid.LoginNotExist,
 				appmsg.RecordNotFound,
 				handler.ErrRecordNotFound,
 				apperror.WithLayer("UserService CheckLogin() GetUsersByAccount() RecordNotFound"),
@@ -141,7 +143,7 @@ func (s *UserService) CheckLogin(account valueobj.Account, password string) (*st
 		)
 	}
 
-	err = s.publishUserCheckLoginEvent(context.Background(), user)
+	err = s.publishUserCheckLoginEvent(user)
 	if err != nil {
 		// 記錄錯誤但不阻止登入流程
 		return nil, apperror.NewAppError(
@@ -163,7 +165,7 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 		CreateAt: time.Now().Format(time.RFC3339),
 	}
 
-	evt, err := event.NewEvent(events.UserCreatedEventType, payload)
+	evt, err := event.NewEvent(events.UserCreatedEventType, payload, "userService: publishUserCreatedEvent", ctx.Value("trace_id").(string), time.Now())
 	if err != nil {
 		return apperror.NewAppError(
 			msgid.Fail,
@@ -172,8 +174,6 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 			apperror.WithLayer("UserService publishUserCreatedEvent() NewEvent()"),
 		)
 	}
-
-	evt.Source = "user-service"
 
 	if err := s.publisher.Publish(ctx, evt); err != nil {
 		return apperror.NewAppError(
@@ -189,14 +189,14 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 }
 
 // publishUserCheckLoginEvent 發布用戶登入事件
-func (s *UserService) publishUserCheckLoginEvent(ctx context.Context, user *entity.User) error {
+func (s *UserService) publishUserCheckLoginEvent(user *entity.User) error {
 	payload := events.UserCheckLoginEventPayload{
 		UserID:  user.ID,
 		Account: user.GetAccount(),
 		LoginAt: time.Now().Format(time.RFC3339),
 	}
 
-	evt, err := event.NewEvent(events.UserCheckLoginEventType, payload)
+	evt, err := event.NewEvent(events.UserCheckLoginEventType, payload, "userService:publishUserCheckLoginEvent", s.ctx.Value("trace_id").(string), time.Now())
 	if err != nil {
 		return apperror.NewAppError(
 			msgid.Fail,
@@ -206,9 +206,7 @@ func (s *UserService) publishUserCheckLoginEvent(ctx context.Context, user *enti
 		)
 	}
 
-	evt.Source = "user-service"
-
-	if err := s.publisher.Publish(ctx, evt); err != nil {
+	if err := s.publisher.Publish(s.ctx, evt); err != nil {
 		return apperror.NewAppError(
 			msgid.Fail,
 			"failed to publish event",
