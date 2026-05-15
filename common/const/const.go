@@ -9,7 +9,7 @@ const (
 	// RedisRateLimitSecond 	限流的時間窗口（秒）
 	RedisRateLimitSecond = 5
 	// MySQLMaxIdleConns MySQL 連接池的最大空閒連接數
-	MySQLMaxIdleConns = 10
+	MySQLMaxIdleConns = 100
 	// MySQLMaxOpenConns MySQL 連接池的最大打開連接數
-	MySQLMaxOpenConns = 100
+	MySQLMaxOpenConns = 150
 )
