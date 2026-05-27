@@ -165,7 +165,7 @@ func (s *UserService) publishUserCreatedEvent(ctx context.Context, user *entity.
 		CreateAt: time.Now().Format(time.RFC3339),
 	}
 
-	evt, err := event.NewEvent(events.UserCreatedEventType, payload, "userService: publishUserCreatedEvent", ctx.Value("trace_id").(string), time.Now())
+	evt, err := event.NewEvent(events.UserCreatedEventType, payload, "userService: publishUserCreatedEvent", ctx.Value("traceID").(string), time.Now())
 	if err != nil {
 		return apperror.NewAppError(
 			msgid.Fail,
@@ -196,7 +196,7 @@ func (s *UserService) publishUserCheckLoginEvent(user *entity.User) error {
 		LoginAt: time.Now().Format(time.RFC3339),
 	}
 
-	evt, err := event.NewEvent(events.UserCheckLoginEventType, payload, "userService:publishUserCheckLoginEvent", s.ctx.Value("trace_id").(string), time.Now())
+	evt, err := event.NewEvent(events.UserCheckLoginEventType, payload, "userService:publishUserCheckLoginEvent", s.ctx.Value("traceID").(string), time.Now())
 	if err != nil {
 		return apperror.NewAppError(
 			msgid.Fail,

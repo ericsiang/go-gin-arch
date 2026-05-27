@@ -17,7 +17,7 @@ func TraceMiddleware() gin.HandlerFunc {
 		}
 
 		// 設置到 Context 中，供後續處理使用
-		c.Set("trace_id", traceID)
+		c.Set("traceID", traceID)
 
 		// 返回給客戶端（方便追蹤）
 		c.Header("X-Request-ID", traceID)

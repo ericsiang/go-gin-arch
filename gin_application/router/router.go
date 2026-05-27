@@ -156,11 +156,11 @@ func Shutdown(router *gin.RouterGroup) {
 					Account:  "slow_test_user",
 					CreateAt: time.Now().Format(time.RFC3339),
 				}
-				trace_id, ok := c.Get("trace_id")
+				traceID, ok := c.Get("traceID")
 				if !ok {
-					trace_id = "no-trace-id"
+					traceID = "no-trace-id"
 				}
-				evt, _ := event.NewEvent(events.UserCreatedEventType, payload, "slow-test", trace_id.(string), time.Now())
+				evt, _ := event.NewEvent(events.UserCreatedEventType, payload, "slow-test", traceID.(string), time.Now())
 
 				err := broker.Publisher().Publish(c, evt)
 				if err != nil {

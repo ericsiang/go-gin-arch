@@ -26,7 +26,7 @@ func CreateMsgData(key, value string) map[string]string {
 
 // SuccessResponse 成功回應
 func SuccessResponse(c *gin.Context, statusCode int, msg string, data interface{}, result msgid.MsgID) {
-	traceID, _ := c.Get("trace_id")
+	traceID, _ := c.Get("traceID")
 	c.JSON(statusCode, Response{
 		Result:    result,
 		Msg:       msg,
@@ -38,7 +38,7 @@ func SuccessResponse(c *gin.Context, statusCode int, msg string, data interface{
 
 // ErrorResponse 錯誤回應
 func ErrorResponse(c *gin.Context, statusCode int, msg string, result msgid.MsgID, errData interface{}) {
-	traceID, _ := c.Get("trace_id")
+	traceID, _ := c.Get("traceID")
 	c.JSON(statusCode, Response{
 		Result:    result,
 		Msg:       msg,

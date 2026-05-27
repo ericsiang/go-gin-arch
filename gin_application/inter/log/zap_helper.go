@@ -8,18 +8,18 @@ import (
 	"go.uber.org/zap"
 )
 
-// LogErrorWithStack 記錄錯誤日誌，包含 trace_id 和堆栈信息
+// LogErrorWithStack 記錄錯誤日誌，包含 traceID 和堆栈信息
 func LogErrorWithStack(ctx *gin.Context, msg string, appErr *apperror.AppError, extraFields ...zap.Field) {
 
 	// 🔥 輸出完整的錯誤鏈到日誌
 	chain := appErr.ErrorChain()
 
-	// 預分配足夠的容量：trace_id + error + stack + extraFields + AppError 字段
+	// 預分配足夠的容量：traceID + error + stack + extraFields + AppError 字段
 	fields := make([]zap.Field, 0, len(extraFields)+7)
 
-	// 添加 trace_id
-	if traceID, exists := ctx.Get("trace_id"); exists {
-		fields = append(fields, zap.String("trace_id", traceID.(string)))
+	// 添加 traceID
+	if traceID, exists := ctx.Get("traceID"); exists {
+		fields = append(fields, zap.String("traceID", traceID.(string)))
 	}
 
 	// 添加 AppError 特定字段到 fields
